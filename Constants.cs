@@ -17,6 +17,6 @@ namespace MonopolyBot
 
         public static string DBConnect = Environment.GetEnvironmentVariable("DB_CONNECT") ?? "Host=localhost;Port=5432;Username=postgres;Password=123456;Database=postgres";
         public static string UserTable = Environment.GetEnvironmentVariable("USER_DB_TABLE") ?? "Users";
-        public static string ChatStatusTable = Environment.GetEnvironmentVariable("CHAT_STATUS_DB_TABLE") ?? "Users";
+        public static string ChatStatusTable = Environment.GetEnvironmentVariable("CHAT_STATUS_DB_TABLE") ?? "СhatStatus";
     }
 }
