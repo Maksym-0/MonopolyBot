@@ -17,7 +17,7 @@ namespace MonopolyBot
     {
         TelegramBotClient botClient = new TelegramBotClient(Constants.BotID);
         CancellationToken cancellationToken = new CancellationToken();
-        ReceiverOptions receiverOptions = new ReceiverOptions { AllowedUpdates = { } };
+        ReceiverOptions receiverOptions = new ReceiverOptions();
 
         ReplyKeyboardMarkup loginKeyboardMarkup = new ReplyKeyboardMarkup
                     (
