@@ -59,6 +59,14 @@ namespace MonopolyBot.Service
             };
             var data = await _accountClient.LoginAndReturnJWTAsync(account);
 
+            if (data == null || string.IsNullOrEmpty(data.Data))
+            {
+                return new AccServiceResponse()
+                {
+                    Success = false,
+                    Message = "Помилка авторизації: не отримано JWT"
+                };
+            }
             if (data.Success)
             {
                 if(await _userRepository.SearchUserByChatId(chatId))
