@@ -10,6 +10,7 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
+using System.Linq.Expressions;
 
 namespace MonopolyBot
 {
@@ -231,10 +232,17 @@ namespace MonopolyBot
         }
         private async Task HandleMe(ITelegramBotClient botClient, Message message)
         {
-            var data = await _accService.GetMyDataAsync(message.Chat.Id);
-            await botClient.SendMessage(message.Chat.Id,
-                $"Ваше ID: {data.Id}\n" +
-                $"Ваше ім'я: {data.Name}");
+            try
+            {
+                var data = await _accService.GetMyDataAsync(message.Chat.Id);
+                await botClient.SendMessage(message.Chat.Id,
+                    $"Ваше ID: {data.Id}\n" +
+                    $"Ваше ім'я: {data.Name}");
+            }
+            catch(Exception ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні даних: {ex.Message}");
+            }
         }
 
         private async Task HandleCreateRoom(ITelegramBotClient botClient, Message message)
@@ -398,6 +406,12 @@ namespace MonopolyBot
                     await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: roomsKeyboardMarkup);
                     await _chatRepository.DeleteChatStatus(message.Chat.Id);
                 }
+                else
+                {
+                    await botClient.SendMessage(message.Chat.Id, "Помилка при вході в систему");
+                    await botClient.SendMessage(message.Chat.Id, loginData.Message);
+                    await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                }
             }
         }
         private async Task HandleRegisterStatus(ITelegramBotClient botClient, Message message, ChatStatus status)
@@ -443,6 +457,7 @@ namespace MonopolyBot
                     return;
                 }
                 status.MaxNumberOfPlayers = maxNumberOfPlayers;
+                await _chatRepository.UpdateChatStatus(status);
                 await botClient.SendMessage(message.Chat.Id, "Введіть пароль для кімнати або null:");
             }
             else
