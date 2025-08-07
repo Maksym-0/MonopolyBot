@@ -9,7 +9,9 @@ namespace MonopolyBot.Database
         public async Task InsertChatStatus(ChatStatus status)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.ChatStatusTable}\" (\"ChatId\", \"IsAwaitingLogin\", \"IsAwaitingRegister\", \"IsAwaitingJoinRoom\", \"IsAwaitingCreateRoom\", \"IsAwaitingLevelUpCell\", \"IsAwaitingLevelDownCell\", \"AccountName\", \"RoomId\", \"MaxNumberOfPlayers\") " +
-                $"VALUES (@chatId, @isAwaitingLogin, @isAwaitingRegister, @isAwaitingJoinRoom, @isAwaitingCreateRoom, @isAwaitingLevelUpCell, @isAwaitingLevelDownCell, @accountName, @roomId, @maxNumberOfPlayers)";
+                $"VALUES (@chatId, @isAwaitingLogin, @isAwaitingRegister, @isAwaitingJoinRoom, @isAwaitingCreateRoom, @isAwaitingLevelUpCell, @isAwaitingLevelDownCell, @accountName, @roomId, @maxNumberOfPlayers) " +
+                $"ON CONFLICT (\"ChatId\") " +
+                $"DO UPDATE SET \"IsAwaitingLogin\" = @isAwaitingLogin, \"IsAwaitingRegister\" = @isAwaitingRegister, \"IsAwaitingJoinRoom\" = @isAwaitingJoinRoom, \"IsAwaitingCreateRoom\" = @isAwaitingCreateRoom, \"IsAwaitingLevelUpCell\" = @isAwaitingLevelUpCell, \"IsAwaitingLevelDownCell\" = @isAwaitingLevelDownCell, \"AccountName\" = @accountName, \"RoomId\" = @roomId, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
@@ -71,15 +73,15 @@ namespace MonopolyBot.Database
         private void AddWithValue(NpgsqlCommand cmd, ChatStatus status)
         {
             cmd.Parameters.AddWithValue("chatId", status.ChatId);
-            cmd.Parameters.AddWithValue("IsAwaitingLogin", status.IsAwaitingLogin);
-            cmd.Parameters.AddWithValue("IsAwaitingRegister", status.IsAwaitingRegister);
-            cmd.Parameters.AddWithValue("IsAwaitingJoinRoom", status.IsAwaitingJoinRoom);
-            cmd.Parameters.AddWithValue("IsAwaitingCreateRoom", status.IsAwaitingCreateRoom);
-            cmd.Parameters.AddWithValue("IsAwaitingLevelUpCell", status.IsAwaitingLevelUpCell);
-            cmd.Parameters.AddWithValue("IsAwaitingLevelDownCell", status.IsAwaitingLevelDownCell);
-            cmd.Parameters.AddWithValue("AccountName", (object)status.AccountName ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("RoomId", (object)status.RoomId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("MaxNumberOfPlayers", (object)status.MaxNumberOfPlayers ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("isAwaitingLogin", status.IsAwaitingLogin);
+            cmd.Parameters.AddWithValue("isAwaitingRegister", status.IsAwaitingRegister);
+            cmd.Parameters.AddWithValue("isAwaitingJoinRoom", status.IsAwaitingJoinRoom);
+            cmd.Parameters.AddWithValue("isAwaitingCreateRoom", status.IsAwaitingCreateRoom);
+            cmd.Parameters.AddWithValue("isAwaitingLevelUpCell", status.IsAwaitingLevelUpCell);
+            cmd.Parameters.AddWithValue("isAwaitingLevelDownCell", status.IsAwaitingLevelDownCell);
+            cmd.Parameters.AddWithValue("accountName", (object)status.AccountName ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("roomId", (object)status.RoomId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("maxNumberOfPlayers", (object)status.MaxNumberOfPlayers ?? DBNull.Value);
         }
         private async Task<ChatStatus> BuildChatStatus(NpgsqlDataReader npgsqlData)
         {
