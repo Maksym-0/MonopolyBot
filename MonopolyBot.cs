@@ -385,6 +385,7 @@ namespace MonopolyBot
             if (status.AccountName == null)
             {
                 status.AccountName = message.Text;
+                await _chatRepository.UpdateChatStatus(status);
                 await botClient.SendMessage(message.Chat.Id, "Введіть пароль для входу:");
             }
             else
@@ -404,6 +405,7 @@ namespace MonopolyBot
             if (status.AccountName == null)
             {
                 status.AccountName = message.Text;
+                await _chatRepository.UpdateChatStatus(status);
                 await botClient.SendMessage(message.Chat.Id, "Введіть пароль для реєстрації:");
             }
             else
