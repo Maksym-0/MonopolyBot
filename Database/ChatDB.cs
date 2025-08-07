@@ -9,7 +9,7 @@ namespace MonopolyBot.Database
         public async Task InsertChatStatus(ChatStatus status)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.ChatStatusTable}\" (\"ChatId\", \"IsAwaitingLogin\", \"IsAwaitingRegister\", \"IsAwaitingJoinRoom\", \"IsAwaitingCreateRoom\", \"IsAwaitingLevelUpCell\", \"IsAwaitingLevelDownCell\", \"AccountName\", \"RoomId\", \"MaxNumberOfPlayers\") " +
-                $"VALUES (@chatId, @isAwaitingLogin, @isAwaitingRegister, @isAwaitingJoinRoom, @isAwaitingCreateRoom, @isAwaitingevelUpCell, @isAwaitingLevelDownCell, @accountName, @roomId, @maxNumberOfPlayers)";
+                $"VALUES (@chatId, @isAwaitingLogin, @isAwaitingRegister, @isAwaitingJoinRoom, @isAwaitingCreateRoom, @isAwaitingLevelUpCell, @isAwaitingLevelDownCell, @accountName, @roomId, @maxNumberOfPlayers)";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
