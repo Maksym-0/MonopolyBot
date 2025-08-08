@@ -545,6 +545,7 @@ namespace MonopolyBot
                 try
                 {
                     RoomResponse roomResponse = await _roomService.JoinRoomAsync(chatId, id, null);
+                    await _userRepository.UpdateUserGameId(chatId, id);
                     await botClient.SendMessage(chatId, $"Ви приєдналися до кімнати {roomResponse.RoomId}.");
                     if (roomResponse.InGame == true)
                     {
