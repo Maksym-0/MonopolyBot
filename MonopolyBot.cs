@@ -402,7 +402,6 @@ namespace MonopolyBot
                 if (loginData.Success)
                 {
                     await botClient.SendMessage(message.Chat.Id, "Ви увійшли в систему.");
-                    await botClient.SendMessage(message.Chat.Id, loginData.Message);
                     await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: roomsKeyboardMarkup);
                     await _chatRepository.DeleteChatStatus(message.Chat.Id);
                 }
@@ -450,7 +449,16 @@ namespace MonopolyBot
         {
             if (status.MaxNumberOfPlayers == null)
             {
-                int maxNumberOfPlayers = Convert.ToInt32(message.Text);
+                int maxNumberOfPlayers;
+                try
+                {
+                    maxNumberOfPlayers = Convert.ToInt32(message.Text);
+                }
+                catch (FormatException)
+                {
+                    await botClient.SendMessage(message.Chat.Id, "Будь ласка, введіть коректне число для максимальної кількості гравців:");
+                    return;
+                }
                 if (maxNumberOfPlayers > 4 || maxNumberOfPlayers < 2)
                 {
                     await botClient.SendMessage(message.Chat.Id, "Максимальна кількість гравців повинна бути від 2 до 4. Спробуйте ще раз:");
