@@ -65,7 +65,7 @@ namespace MonopolyBot.Clients
         }
         public async Task<Models.API.ApiResponse.ApiResponse<RoomResponse>> QuitRoomAsync(string jwt)
         {
-            string responseJson = await SendRoomRequestAsync(jwt, "/quit", HttpMethod.Get);
+            string responseJson = await SendRoomRequestAsync(jwt, "/quit", HttpMethod.Put);
             var apiResponse = JsonConvert.DeserializeObject<Models.API.ApiResponse.ApiResponse<RoomResponse>>(responseJson);
             return apiResponse;
         }
