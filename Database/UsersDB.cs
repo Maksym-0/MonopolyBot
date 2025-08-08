@@ -125,7 +125,7 @@ namespace MonopolyBot.Database
             {
                 ChatId = reader.GetInt64(0),
                 UserId = reader.GetString(1),
-                GameId = reader.GetString(2),
+                GameId = reader.IsDBNull(2) ? null : reader.GetString(2),
                 Name = reader.GetString(3),
                 JWT = reader.GetString(4),
                 CreatedAt = reader.GetDateTime(5),
