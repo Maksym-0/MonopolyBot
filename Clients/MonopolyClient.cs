@@ -141,14 +141,15 @@ namespace MonopolyBot.Clients
         {
             HttpRequestMessage request;
             if (command != null)
-                request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiRoomHost}");
-            else
                 request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiRoomHost}{command}");
+            else
+                request = new HttpRequestMessage(method, $"{Constants.ApiAddress}{Constants.ApiRoomHost}");
             
             request.Headers.Add("Authorization", $"Bearer {jwt}");
 
             HttpResponseMessage response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(responseJson);
             return responseJson;
         }
         private async Task<string> SendGameRequestAsync(string jwt, string gameId, string? command, HttpMethod method)
