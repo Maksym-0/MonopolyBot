@@ -11,7 +11,7 @@ namespace MonopolyBot.Database
             var sql = $"INSERT INTO PUBLIC.\"{Constants.UserTable}\" (\"ChatId\", \"UserId\", \"GameId\", \"Name\", \"JWT\", \"CreatedAt\", \"ExpiresAt\") " +
                 $"Values (@chatId, @userId, @gameId, @name, @jwt, @createdAt, @expiresAt) " +
                 $"ON CONFLICT (\"ChatId\") " +
-                $"DO UPDATE SET \"ChatId\", \"UserId\", \"GameId\", \"Name\", \"JWT\", \"CreatedAt\", \"ExpiresAt\"";
+                $"DO UPDATE SET \"UserId\" = @userId, \"GameId\" = @gameId, \"Name\" = @name, \"JWT\" = @jwt, \"CreatedAt\" = @createdAt, \"ExpiresAt\" = @expiresAt";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
