@@ -25,7 +25,7 @@ namespace MonopolyBot.Service
 
             ApiResponse<List<RoomResponse>> response = await _roomClient.GetRoomsAsync(user.JWT);
             if (!response.Success)
-                throw new Exception($"Помилка при отриманні списку доступних кімнат: {response.Message}");
+                throw new Exception(response.Message);
 
             return response.Data;
         }
@@ -40,7 +40,7 @@ namespace MonopolyBot.Service
             });
 
             if (!response.Success)
-                throw new Exception($"Помилка при створенні кімнати: {response.Message}");
+                throw new Exception(response.Message);
 
             return response.Data;
         }
@@ -55,10 +55,10 @@ namespace MonopolyBot.Service
             });
 
             if (!response.Success)
-                throw new Exception($"Помилка при приєднанні до кімнати: {response.Message}");
+                throw new Exception(response.Message);
             
             user.GameId = roomId;
-            await _userRepository.UpdateUserGameId(user);
+            await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
             return response.Data;
         }
         public async Task<string> QuitRoomAsync(long chatId)
@@ -68,10 +68,10 @@ namespace MonopolyBot.Service
             ApiResponse<RoomResponse> response = await _roomClient.QuitRoomAsync(user.JWT);
 
             if (!response.Success)
-                throw new Exception($"Помилка при виході з кімнати: {response.Message}");
+                throw new Exception(response.Message);
 
             user.GameId = null;
-            await _userRepository.UpdateUserGameId(user);
+            await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
             return response.Message;
         }
     }

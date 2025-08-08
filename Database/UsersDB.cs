@@ -63,15 +63,19 @@ namespace MonopolyBot.Database
             await _connection.CloseAsync();
             return user;
         }
-        public async Task UpdateUserGameId(User user)
+        public async Task UpdateUserGameId(long chatId, string? gameId)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.UserTable}\" " +
                 $"SET \"GameId\" = @gameId" +
-                $"WHERE \"UserId\" = @userId";
+                $"WHERE \"ChatId\" = @chatId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            AddWithValue(cmd, user);
+            cmd.Parameters.AddWithValue("chatId", chatId);
+            if(gameId != null)
+                cmd.Parameters.AddWithValue("gameId", gameId);
+            else
+                cmd.Parameters.AddWithValue("gameId", DBNull.Value);
 
             await _connection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();

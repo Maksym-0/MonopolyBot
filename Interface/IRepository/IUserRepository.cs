@@ -7,7 +7,7 @@ namespace MonopolyBot.Interface.IRepository
         public Task InsertUser(User user);
         public Task<User> ReadUserWithChatId(long chatId);
         public Task<User> ReadUserWithId(string userId);
-        public Task UpdateUserGameId(User user);
+        public Task UpdateUserGameId(long chatId, string? gameId);
         public Task DeleteUserWithChatId(long chatId);
         public Task DeleteUserWithId(string userId);
 

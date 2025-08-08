@@ -101,7 +101,7 @@ namespace MonopolyBot.Service
             if (response.Success)
             {
                 user.GameId = null;
-                await _userRepository.UpdateUserGameId(user);
+                await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
             }
             else
             {

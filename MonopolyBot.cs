@@ -10,7 +10,6 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
-using System.Linq.Expressions;
 
 namespace MonopolyBot
 {
@@ -470,6 +469,7 @@ namespace MonopolyBot
                 try
                 {
                     RoomResponse roomResponse = await _roomService.CreateRoomAsync(message.Chat.Id, status.MaxNumberOfPlayers ?? 2, password);
+                    await _userRepository.UpdateUserGameId(message.Chat.Id, roomResponse.RoomId);
                     await botClient.SendMessage(message.Chat.Id, $"Кімната {roomResponse.RoomId} створена.");
                 }
                 catch (Exception ex)
