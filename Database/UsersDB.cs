@@ -9,7 +9,9 @@ namespace MonopolyBot.Database
         public async Task InsertUser(User user)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.UserTable}\" (\"ChatId\", \"UserId\", \"GameId\", \"Name\", \"JWT\", \"CreatedAt\", \"ExpiresAt\") " +
-                $"Values (@chatId, @userId, @gameId, @name, @jwt, @createdAt, @expiresAt)";
+                $"Values (@chatId, @userId, @gameId, @name, @jwt, @createdAt, @expiresAt) " +
+                $"ON CONFLICT (\"ChatId\") " +
+                $"DO UPDATE SET \"ChatId\", \"UserId\", \"GameId\", \"Name\", \"JWT\", \"CreatedAt\", \"ExpiresAt\"";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
