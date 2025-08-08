@@ -5,7 +5,6 @@ using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.API.Request;
 using Newtonsoft.Json;
 using System.Text;
-using Telegram.Bot.Types;
 
 namespace MonopolyBot.Clients
 {
@@ -36,6 +35,7 @@ namespace MonopolyBot.Clients
         {
             string responseJson = await SendRoomRequestAsync(jwt, null, HttpMethod.Get);
             var apiResponse = JsonConvert.DeserializeObject<Models.API.ApiResponse.ApiResponse<List<RoomResponse>>>(responseJson);
+            Console.WriteLine(responseJson);
             return apiResponse;
         }
         public async Task<Models.API.ApiResponse.ApiResponse<RoomResponse>> CreateRoomAsync(string jwt, CreateRoomRequest dto)

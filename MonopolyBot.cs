@@ -581,7 +581,6 @@ namespace MonopolyBot
             string players = "";
             foreach (var player in room.Players)
             {
-                Console.WriteLine($"PlayerId: '{player.Id}'");
                 players += player.Name + ", ";
             }
             players = players.Substring(0, players.Length - 2);
