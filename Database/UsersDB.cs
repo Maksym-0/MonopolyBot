@@ -66,7 +66,7 @@ namespace MonopolyBot.Database
         public async Task UpdateUserGameId(long chatId, string? gameId)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.UserTable}\" " +
-                $"SET \"GameId\" = @gameId" +
+                $"SET \"GameId\" = @gameId " +
                 $"WHERE \"ChatId\" = @chatId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
