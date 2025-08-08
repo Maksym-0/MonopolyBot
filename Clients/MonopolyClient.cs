@@ -35,7 +35,14 @@ namespace MonopolyBot.Clients
         {
             string responseJson = await SendRoomRequestAsync(jwt, null, HttpMethod.Get);
             var apiResponse = JsonConvert.DeserializeObject<Models.API.ApiResponse.ApiResponse<List<RoomResponse>>>(responseJson);
-            Console.WriteLine(responseJson);
+            Console.WriteLine(apiResponse);
+            Console.WriteLine(apiResponse.Data[0].RoomId);
+            Console.WriteLine(apiResponse.Data[0].Players[0].Id);
+            Console.WriteLine(apiResponse.Data[0].Players[0].Name);
+            Console.WriteLine(apiResponse.Data[0].HavePassword);
+            Console.WriteLine(apiResponse.Data[0].InGame);
+            Console.WriteLine(apiResponse.Data[0].MaxNumberOfPlayers);
+            Console.WriteLine(apiResponse.Data[0].NumberOfPlayers);
             return apiResponse;
         }
         public async Task<Models.API.ApiResponse.ApiResponse<RoomResponse>> CreateRoomAsync(string jwt, CreateRoomRequest dto)
@@ -149,7 +156,6 @@ namespace MonopolyBot.Clients
 
             HttpResponseMessage response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(responseJson);
             return responseJson;
         }
         private async Task<string> SendGameRequestAsync(string jwt, string gameId, string? command, HttpMethod method)
