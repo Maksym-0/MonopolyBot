@@ -10,6 +10,7 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
+using System.Security.Principal;
 
 namespace MonopolyBot
 {
@@ -580,6 +581,7 @@ namespace MonopolyBot
             string players = "";
             foreach (var player in room.Players)
             {
+                Console.WriteLine($"PlayerId: '{player.Id}'");
                 players += player.Name + ", ";
             }
             players = players.Substring(0, players.Length - 2);
