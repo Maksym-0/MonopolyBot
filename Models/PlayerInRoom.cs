@@ -8,8 +8,8 @@ namespace MonopolyBot.Models
 {
     internal class PlayerInRoom
     {
-        public string RoomId { get; }
-        public string Id { get; }
-        public string Name { get; }
+        public string RoomId { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
     }
 }
