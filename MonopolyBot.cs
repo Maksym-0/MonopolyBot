@@ -10,7 +10,6 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
-using System.Security.Principal;
 
 namespace MonopolyBot
 {
@@ -600,7 +599,7 @@ namespace MonopolyBot
         {
             string id = data.Split(':')[1];
             string passwordStatus = data.Split(':')[2];
-            if (passwordStatus == "true")
+            if (passwordStatus == "True")
             {
                 await _chatRepository.InsertChatStatus(new ChatStatus(chatId) { IsAwaitingJoinRoom = true, RoomId = id });
                 await botClient.SendMessage(chatId, "Введіть пароль для приєднання до кімнати:");
