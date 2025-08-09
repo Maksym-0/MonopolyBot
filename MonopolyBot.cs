@@ -239,6 +239,11 @@ namespace MonopolyBot
                     $"Ваше ID: {data.Id}\n" +
                     $"Ваше ім'я: {data.Name}");
             }
+            catch(UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch(Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні даних: {ex.Message}");
@@ -298,6 +303,11 @@ namespace MonopolyBot
                 GameResponse game = await _gameService.GameStatusAsync(message.Chat.Id);
                 await SendGameMessage(botClient, message.Chat.Id, game);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні статусу гри: {ex.Message}");
@@ -309,6 +319,11 @@ namespace MonopolyBot
             {
                 bool result = await _gameService.LeaveGameAsync(message.Chat.Id);
                 await botClient.SendMessage(message.Chat.Id, "Ви вийшли з гри.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -322,6 +337,11 @@ namespace MonopolyBot
                 await _gameService.RollDicesAsync(message.Chat.Id);
                 await botClient.SendMessage(message.Chat.Id, "Кубики кинуто. Перевірте статус гри для отримання результатів.");
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при кидку кубиків: {ex.Message}");
@@ -333,6 +353,11 @@ namespace MonopolyBot
             {
                 await _gameService.BuyCellAsync(message.Chat.Id);
                 await botClient.SendMessage(message.Chat.Id, "Клітинка куплена. Перевірте статус гри для отримання результатів.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -346,6 +371,11 @@ namespace MonopolyBot
                 await _gameService.PayAsync(message.Chat.Id);
                 await botClient.SendMessage(message.Chat.Id, "Оплата здійснена. Перевірте статус гри для отримання результатів.");
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при оплаті: {ex.Message}");
@@ -357,6 +387,11 @@ namespace MonopolyBot
             {
                 await _chatRepository.InsertChatStatus(new ChatStatus(message.Chat.Id) { IsAwaitingLevelUpCell = true });
                 await botClient.SendMessage(message.Chat.Id, "Підвищення рівня клітини розпочато. Введіть номер клітини для підвищення рівня:");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -370,6 +405,11 @@ namespace MonopolyBot
                 await _chatRepository.InsertChatStatus(new ChatStatus(message.Chat.Id) { IsAwaitingLevelDownCell = true });
                 await botClient.SendMessage(message.Chat.Id, "Зниження рівня клітини розпочато. Введіть номер клітини для зниження рівня:");
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при зниженні рівня клітини: {ex.Message}");
@@ -381,6 +421,11 @@ namespace MonopolyBot
             {
                 await _gameService.EndActionAsync(message.Chat.Id);
                 await SendEndActionMessageAsync(botClient, message.Chat.Id);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -439,6 +484,11 @@ namespace MonopolyBot
                     await SendStartGameMessageAsync(botClient, roomResponse);
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при приєднанні до кімнати: {ex.Message}");
@@ -481,6 +531,11 @@ namespace MonopolyBot
                     await _userRepository.UpdateUserGameId(message.Chat.Id, roomResponse.RoomId);
                     await botClient.SendMessage(message.Chat.Id, $"Кімната {roomResponse.RoomId} створена.");
                 }
+                catch (UnauthorizedAccessException ex)
+                {
+                    await botClient.SendMessage(message.Chat.Id, ex.Message);
+                    await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+                }
                 catch (Exception ex)
                 {
                     await botClient.SendMessage(message.Chat.Id, $"Помилка при створенні кімнати: {ex.Message}");
@@ -503,6 +558,11 @@ namespace MonopolyBot
                     await botClient.SendMessage(message.Chat.Id, "Не вдалося підвищити рівень клітини. Перевірте статус гри для отримання результатів.");
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при підвищенні рівня клітини: {ex.Message}");
@@ -523,6 +583,11 @@ namespace MonopolyBot
                 {
                     await botClient.SendMessage(message.Chat.Id, "Не вдалося знизити рівень клітини. Перевірте статус гри для отримання результатів.");
                 }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -552,6 +617,11 @@ namespace MonopolyBot
                         await SendStartGameMessageAsync(botClient, roomResponse);
                     }
                 }
+                catch (UnauthorizedAccessException ex)
+                {
+                    await botClient.SendMessage(chatId, ex.Message);
+                    await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+                }
                 catch (Exception ex)
                 {
                     await botClient.SendMessage(chatId, $"Помилка при приєднанні до кімнати: {ex.Message}");
@@ -566,6 +636,11 @@ namespace MonopolyBot
                 string result = await _roomService.QuitRoomAsync(chatId);
                 await botClient.SendMessage(chatId, result);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(chatId, ex.Message);
+                await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
             catch (Exception ex)
             {
                 await botClient.SendMessage(chatId, $"Помилка при виході з кімнати: {ex.Message}");
@@ -578,6 +653,11 @@ namespace MonopolyBot
                 GameResponse gameStatus = await _gameService.GameStatusAsync(chatId);
                 await botClient.SendMessage(chatId, "Ви приєднались до гри", replyMarkup: gameKeyboardMarkup);
                 await SendGameMessage(botClient, chatId, gameStatus);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(chatId, ex.Message);
+                await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
@@ -644,7 +724,7 @@ namespace MonopolyBot
                                 InlineKeyboardButton.WithCallbackData("GameStatus", $"GameStatus:{room.RoomId}")
                             );
                 Task task = botClient.SendMessage(user.ChatId, "Гру в Вашій кімнаті розпочато." +
-                    "\nНатисність кнопку нижче, щоб перейти до неї:", replyMarkup: keyboardMarkup);
+                    "\nНатисність кнопку нижче, щоб перейти до гри:", replyMarkup: keyboardMarkup);
                 tasks.Add(task);
             }
             await Task.WhenAll(tasks);
