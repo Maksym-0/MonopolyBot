@@ -330,7 +330,7 @@ namespace MonopolyBot
             try
             {
                 bool result = await _gameService.LeaveGameAsync(message.Chat.Id);
-                await botClient.SendMessage(message.Chat.Id, "Ви вийшли з гри.");
+                await botClient.SendMessage(message.Chat.Id, "Ви вийшли з гри.", replyMarkup: roomsKeyboardMarkup);
             }
             catch (UnauthorizedAccessException ex)
             {
