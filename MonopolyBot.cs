@@ -740,11 +740,11 @@ namespace MonopolyBot
                 }
                 else
                 {
-                    cellInfo = $"{cell.Number}: {cell.Name} - Особлива клітина: {cell.Unique}. Належить: {cell.Owner ?? "Нікому"}\n";
+                    cellInfo = $"{cell.Number}: {cell.Name} - Належить: {cell.Owner ?? "Нікому"}\n";
                     if (cell.Owner == null)
-                        cellInfo += $"Вартість придбання: {cell.Price}. Орендна плата: {cell.Rent}\n";
+                        cellInfo += $"Вартість придбання: {cell.Price}$. Орендна плата: {cell.Rent}$\n";
                     else
-                        cellInfo += $"Орендна плата: {cell.Rent}\n";
+                        cellInfo += $"Орендна плата: {cell.Rent}$\n";
                     if (playersOnCell.Count > 0)
                         cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
                     else
@@ -767,6 +767,7 @@ namespace MonopolyBot
             foreach (var player in game.Players)
             {
                 string playerInfo = $"{player.Name} - {player.Balance}$. В грі: {player.InGame}\n" +
+                    $"Статус ходу: {player.HisAction}\n" +
                     $"Клітина перебування: {player.Location}\n\n";
 
                 if(playerBlock.Length + playerInfo.Length >= maxMessageLength)
