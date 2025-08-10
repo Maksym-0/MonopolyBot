@@ -729,17 +729,28 @@ namespace MonopolyBot
                         playersOnCell.Add(player.Name);
                 }
 
-                string cellInfo = $"{cell.Number}: {cell.Name} - Належить: {cell.Owner ?? "Нікому"}. Особлива клітина: {cell.Unique}\n";
-                if (cell.Owner == null)
-                    cellInfo += $"Вартість придбання: {cell.Price}. Орендна плата: {cell.Rent}\n";
+                string cellInfo = "";
+                if (cell.Unique)
+                {
+                    cellInfo = $"{cell.Number}: {cell.Name} - Особлива клітина: {cell.Unique}\n";
+                    if (playersOnCell.Count > 0)
+                        cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
+                    else
+                        cellInfo += "Гравців на клітині немає.\n";
+                }
                 else
-                    cellInfo += $"Орендна плата: {cell.Rent}\n";
-                if (playersOnCell.Count > 0)
-                    cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
-                else
-                    cellInfo += "Гравців на клітині немає.\n";
-                if(!cell.Unique)
+                {
+                    cellInfo = $"{cell.Number}: {cell.Name} - Особлива клітина: {cell.Unique}. Належить: {cell.Owner ?? "Нікому"}\n";
+                    if (cell.Owner == null)
+                        cellInfo += $"Вартість придбання: {cell.Price}. Орендна плата: {cell.Rent}\n";
+                    else
+                        cellInfo += $"Орендна плата: {cell.Rent}\n";
+                    if (playersOnCell.Count > 0)
+                        cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
+                    else
+                        cellInfo += "Гравців на клітині немає.\n";
                     cellInfo += $"Рівень: {cell.Level}\n";
+                }
                 
                 if(cellBlock.Length + cellInfo.Length > maxMessageLength)
                 {
@@ -755,7 +766,7 @@ namespace MonopolyBot
             string playerBlock = "";
             foreach (var player in game.Players)
             {
-                string playerInfo = $"{player.Name} - {player.Balance}. В грі: {player.InGame}\n" +
+                string playerInfo = $"{player.Name} - {player.Balance}$. В грі: {player.InGame}\n" +
                     $"Клітина перебування: {player.Location}\n\n";
 
                 if(playerBlock.Length + playerInfo.Length >= maxMessageLength)
