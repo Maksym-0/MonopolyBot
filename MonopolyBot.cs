@@ -10,6 +10,7 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
+using System.Text;
 
 namespace MonopolyBot
 {
@@ -712,8 +713,12 @@ namespace MonopolyBot
         }
         private async Task SendGameMessage(ITelegramBotClient botClient, long chatId, GameResponse game)
         {
-            string cells = "";
-            string players = "";
+            const int maxMessageLength = 4000;
+
+            List<string> cellMessages = new List<string>();
+            List<string> playerMessages = new List<string>();
+
+            string cellBlock = "";
             List<string> playersOnCell;
             foreach (var cell in game.Cells)
             {
@@ -724,24 +729,51 @@ namespace MonopolyBot
                         playersOnCell.Add(player.Name);
                 }
 
-                cells += $"{cell.Number}: {cell.Name} - Належить: {cell.Owner ?? "Нікому"}. Особлива клітина: {cell.Unique}\n";
+                string cellInfo = $"{cell.Number}: {cell.Name} - Належить: {cell.Owner ?? "Нікому"}. Особлива клітина: {cell.Unique}\n";
                 if (cell.Owner == null)
-                    cells += $"Вартість придбання: {cell.Price}. Орендна плата: {cell.Rent}\n";
+                    cellInfo += $"Вартість придбання: {cell.Price}. Орендна плата: {cell.Rent}\n";
                 else
-                    cells += $"Орендна плата: {cell.Rent}\n";
+                    cellInfo += $"Орендна плата: {cell.Rent}\n";
                 if (playersOnCell.Count > 0)
-                    cells += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
+                    cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
                 else
-                    cells += "Гравців на клітині немає.\n";
-                cells += $"Рівень: {cell.Level}\n";
+                    cellInfo += "Гравців на клітині немає.\n";
+                if(!cell.Unique)
+                    cellInfo += $"Рівень: {cell.Level}\n";
+                
+                if(cellBlock.Length + cellInfo.Length > maxMessageLength)
+                {
+                    cellMessages.Add(cellBlock);
+                    cellBlock = cellInfo;
+                }
+                else
+                    cellBlock += cellInfo;
             }
+            if(!string.IsNullOrEmpty(cellBlock))
+                cellMessages.Add(cellBlock);
+
+            string playerBlock = "";
             foreach (var player in game.Players)
             {
-                players += $"{player.Name} - {player.Balance}. В грі: {player.InGame}\n" +
-                    $"Клітина перебування: {player.Location}";
+                string playerInfo = $"{player.Name} - {player.Balance}. В грі: {player.InGame}\n" +
+                    $"Клітина перебування: {player.Location}\n\n";
+
+                if(playerBlock.Length + playerInfo.Length >= maxMessageLength)
+                {
+                    playerMessages.Add(playerBlock);
+                    playerBlock = playerInfo;
+                }
+                else
+                    playerBlock += playerInfo;
             }
-            await botClient.SendMessage(chatId, cells);
-            await botClient.SendMessage(chatId, players);
+            if(!string.IsNullOrEmpty(playerBlock))
+                playerMessages.Add(playerBlock);
+
+            foreach (string msg in cellMessages)
+                await botClient.SendMessage(chatId, msg);
+
+            foreach (string msg in playerMessages)
+                await botClient.SendMessage(chatId, msg);
         }
         private async Task SendStartGameMessageAsync(ITelegramBotClient botClient, RoomResponse room)
         {
