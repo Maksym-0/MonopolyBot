@@ -120,6 +120,11 @@ namespace MonopolyBot
             {
                 await HandleCallbackGameStatus(botClient, chatId, data);
             }
+            else
+            if (data.StartsWith("ReturnGame:"))
+            {
+                await HandleCallbackReturnGame(botClient, chatId, data);
+            }
         }
 
         private async Task HandlerMessageAsync(ITelegramBotClient botClient, Message message)
@@ -274,11 +279,18 @@ namespace MonopolyBot
                         if (player.Id == account.Id)
                             playerInside = true;
                     }
-                    if (playerInside)
+                    if (playerInside && room.InGame)
                     {
                         keyboardMarkup = new
                         (
-                            InlineKeyboardButton.WithCallbackData("Join", $"JoinRoom:{room.RoomId}:{room.HavePassword}"),
+                            InlineKeyboardButton.WithCallbackData("ReturnGame", $"ReturnGame:{room.RoomId}"),
+                            InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
+                        );
+                    }
+                    else if (playerInside)
+                    {
+                        keyboardMarkup = new
+                        (
                             InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
                         );
                     }
@@ -661,6 +673,25 @@ namespace MonopolyBot
             catch (Exception ex)
             {
                 await botClient.SendMessage(chatId, $"Помилка при отриманні статусу гри: {ex.Message}");
+            }
+        }
+        private async Task HandleCallbackReturnGame(ITelegramBotClient botClient, long chatId, string data)
+        {
+            string id = data.Split(':')[1];
+            try
+            {
+                GameResponse gameResponse = await _gameService.GameStatusAsync(chatId);
+                await botClient.SendMessage(chatId, "Ви повернулись до гри", replyMarkup: gameKeyboardMarkup);
+                await SendGameMessage(botClient, chatId, gameResponse);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(chatId, ex.Message);
+                await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendMessage(chatId, $"Помилка при поверненні до гри: {ex.Message}");
             }
         }
 
