@@ -12,7 +12,7 @@ namespace MonopolyBot.Interface
     internal interface IGameService
     {
         public Task<GameResponse> GameStatusAsync(long chatId);
-        public Task<bool> RollDicesAsync(long chatId);
+        public Task<bool> RollDiceAsync(long chatId);
         public Task<bool> PayAsync(long chatId);
         public Task<bool> BuyCellAsync(long chatId);
         public Task<bool> LevelUpCellAsync(long chatId, int cellNumber);

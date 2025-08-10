@@ -10,7 +10,6 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
-using System.Text;
 
 namespace MonopolyBot
 {
@@ -25,7 +24,7 @@ namespace MonopolyBot
                     new[]
                         {
                         new KeyboardButton [] {"Register", "Login"},
-                        new KeyboardButton [] { "Me" }
+                        new KeyboardButton [] { "Profile" }
                         }
                     )
         {
@@ -35,8 +34,8 @@ namespace MonopolyBot
                     (
                     new[]
                         {
-                        new KeyboardButton [] {"CreateRoom", "GetRooms"},
-                        new KeyboardButton [] { "Me" }
+                        new KeyboardButton [] {"Create Room", "View Rooms"},
+                        new KeyboardButton [] { "Profile" }
                         }
                     )
         {
@@ -46,10 +45,10 @@ namespace MonopolyBot
                     (
                     new[]
                         {
-                       new KeyboardButton [] {"GameStatus", "RollDices"},
+                       new KeyboardButton [] {"Game Status", "Roll Dice"},
                        new KeyboardButton [] {"Buy", "Pay"},
-                       new KeyboardButton [] {"LevelUp", "LevelDown"},
-                       new KeyboardButton [] { "EndAction", "LeaveGame" }
+                       new KeyboardButton [] {"Level Up", "Level Down"},
+                       new KeyboardButton [] { "End Action", "Leave Game" }
                         }
                     )
         {
@@ -122,9 +121,14 @@ namespace MonopolyBot
                 await HandleCallbackGameStatus(botClient, chatId, data);
             }
             else
-            if (data.StartsWith("ReturnGame:"))
+            if (data.StartsWith("ReturnToGame:"))
             {
-                await HandleCallbackReturnGame(botClient, chatId, data);
+                await HandleCallbackReturnToGame(botClient, chatId, data);
+            }
+            else 
+            if (data.StartsWith("WatchGame:"))
+            {
+                await HandleCallbackWatchGame(botClient, chatId, data);
             }
         }
 
@@ -141,25 +145,28 @@ namespace MonopolyBot
                 case "Login":
                     await HandleLogin(botClient, message);
                     return;
-                case "Me":
+                case "Profile":
                     await HandleMe(botClient, message);
                     return;
                 
-                case "CreateRoom":
+                case "Create Room":
                     await HandleCreateRoom(botClient, message);
                     return;
-                case "GetRooms":
+                case "View Rooms":
                     await HandleGetRooms(botClient, message);
                     return;
-
-                case "GameStatus":
+                case "Accounts menu":
+                    await HandleAccountsMenu(botClient, message);
+                    return;
+                
+                case "Game Status":
                     await HandleGameStatus(botClient, message);
                     return;
-                case "LeaveGame":
+                case "Leave Game":
                     await HandleLeaveGame(botClient, message);
                     return;
-                case "RollDices":
-                    await HandleRollDices(botClient, message);
+                case "Roll Dice":
+                    await HandleRollDice(botClient, message);
                     return;
                 case "Buy":
                     await HandleBuy(botClient, message);
@@ -167,14 +174,17 @@ namespace MonopolyBot
                 case "Pay":
                     await HandlePay(botClient, message);
                     return;
-                case "LevelUp":
+                case "Level Up":
                     await HandleLevelUp(botClient, message);
                     return;
-                case "LevelDown":
+                case "Level Down":
                     await HandleLevelDown(botClient, message);
                     return;
-                case "EndAction":
+                case "End Action":
                     await HandleEndAction(botClient, message);
+                    return;
+                case "End Watch":
+                    await HandleEndWatchGame(botClient, message);
                     return;
             }
             
@@ -284,7 +294,7 @@ namespace MonopolyBot
                     {
                         keyboardMarkup = new
                         (
-                            InlineKeyboardButton.WithCallbackData("ReturnGame", $"ReturnGame:{room.RoomId}"),
+                            InlineKeyboardButton.WithCallbackData("Return To Game", $"ReturnToGame:{room.RoomId}"),
                             InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
                         );
                     }
@@ -293,6 +303,13 @@ namespace MonopolyBot
                         keyboardMarkup = new
                         (
                             InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
+                        );
+                    }
+                    else if (room.InGame)
+                    {
+                        keyboardMarkup = new
+                        (
+                            InlineKeyboardButton.WithCallbackData("Watch Game", $"WatchGame:{room.RoomId}")
                         );
                     }
                     else
@@ -306,6 +323,10 @@ namespace MonopolyBot
                     await botClient.SendMessage(message.Chat.Id, text, replyMarkup: keyboardMarkup);
                 }
             }
+        }
+        private async Task HandleAccountsMenu(ITelegramBotClient botClient, Message message)
+        {
+            await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
         }
 
         private async Task HandleGameStatus(ITelegramBotClient botClient, Message message)
@@ -342,11 +363,11 @@ namespace MonopolyBot
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при виході з гри: {ex.Message}");
             }
         }
-        private async Task HandleRollDices(ITelegramBotClient botClient, Message message)
+        private async Task HandleRollDice(ITelegramBotClient botClient, Message message)
         {
             try
             {
-                await _gameService.RollDicesAsync(message.Chat.Id);
+                await _gameService.RollDiceAsync(message.Chat.Id);
                 await botClient.SendMessage(message.Chat.Id, "Кубики кинуто. Перевірте статус гри для отримання результатів.");
             }
             catch (UnauthorizedAccessException ex)
@@ -442,6 +463,23 @@ namespace MonopolyBot
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при завершенні дії: {ex.Message}");
+            }
+        }
+        private async Task HandleEndWatchGame(ITelegramBotClient botClient, Message message)
+        {
+            try
+            {
+                await _userRepository.UpdateUserGameId(message.Chat.Id, null);
+                await botClient.SendMessage(message.Chat.Id, "Ви припинили спостереження за грою.", replyMarkup: roomsKeyboardMarkup);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, $"Помилка при припиненні спостереження за грою: {ex.Message}");
             }
         }
 
@@ -676,7 +714,7 @@ namespace MonopolyBot
                 await botClient.SendMessage(chatId, $"Помилка при отриманні статусу гри: {ex.Message}");
             }
         }
-        private async Task HandleCallbackReturnGame(ITelegramBotClient botClient, long chatId, string data)
+        private async Task HandleCallbackReturnToGame(ITelegramBotClient botClient, long chatId, string data)
         {
             string id = data.Split(':')[1];
             try
@@ -693,6 +731,37 @@ namespace MonopolyBot
             catch (Exception ex)
             {
                 await botClient.SendMessage(chatId, $"Помилка при поверненні до гри: {ex.Message}");
+            }
+        }
+        private async Task HandleCallbackWatchGame(ITelegramBotClient botClient, long chatId, string data)
+        {
+            string id = data.Split(':')[1];
+            try
+            {
+                GameResponse gameResponse = await _gameService.GameStatusAsync(chatId);
+                await _userRepository.UpdateUserGameId(chatId, id);
+                ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup
+                            (
+                            new[]
+                                {
+                                    new KeyboardButton [] {"Game Status", "End Watch"},
+                                    new KeyboardButton [] { "Profile" }
+                                }
+                            )
+                {
+                    ResizeKeyboard = true
+                };
+                await botClient.SendMessage(chatId, "Ви спостерігаєте за грою", replyMarkup: replyKeyboardMarkup);
+                await SendGameMessage(botClient, chatId, gameResponse);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(chatId, ex.Message);
+                await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendMessage(chatId, $"Помилка при спостереженні за грою: {ex.Message}");
             }
         }
 
@@ -732,7 +801,7 @@ namespace MonopolyBot
                 string cellInfo = "";
                 if (cell.Unique)
                 {
-                    cellInfo = $"{cell.Number}: {cell.Name} - Особлива клітина: {cell.Unique}\n";
+                    cellInfo = $"{cell.Number}: {cell.Name} - Особлива клітина\n";
                     if (playersOnCell.Count > 0)
                         cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
                     else
@@ -795,10 +864,10 @@ namespace MonopolyBot
                 var user = await _userRepository.ReadUserWithId(player.Id);
                 InlineKeyboardMarkup keyboardMarkup = new
                             (
-                                InlineKeyboardButton.WithCallbackData("GameStatus", $"GameStatus:{room.RoomId}")
+                                InlineKeyboardButton.WithCallbackData("Game Status", $"GameStatus:{room.RoomId}")
                             );
                 Task task = botClient.SendMessage(user.ChatId, "Гру в Вашій кімнаті розпочато." +
-                    "\nНатисність кнопку нижче, щоб перейти до гри:", replyMarkup: keyboardMarkup);
+                    "\nНатисніть кнопку нижче, щоб перейти до гри:", replyMarkup: keyboardMarkup);
                 tasks.Add(task);
             }
             await Task.WhenAll(tasks);

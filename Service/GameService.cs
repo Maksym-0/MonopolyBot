@@ -30,7 +30,7 @@ namespace MonopolyBot.Service
             }
             return response.Data;
         }
-        public async Task<bool> RollDicesAsync(long chatId)
+        public async Task<bool> RollDiceAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.RollTheDiceAsync(user.JWT, user.GameId);
