@@ -162,9 +162,6 @@ namespace MonopolyBot
                 case "Game Status":
                     await HandleGameStatus(botClient, message);
                     return;
-                case "Leave Game":
-                    await HandleLeaveGame(botClient, message);
-                    return;
                 case "Roll Dice":
                     await HandleRollDice(botClient, message);
                     return;
@@ -182,6 +179,9 @@ namespace MonopolyBot
                     return;
                 case "End Action":
                     await HandleEndAction(botClient, message);
+                    return;
+                case "Leave Game":
+                    await HandleLeaveGame(botClient, message);
                     return;
                 case "End Watch":
                     await HandleEndWatchGame(botClient, message);
@@ -346,23 +346,6 @@ namespace MonopolyBot
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні статусу гри: {ex.Message}");
             }
         }
-        private async Task HandleLeaveGame(ITelegramBotClient botClient, Message message)
-        {
-            try
-            {
-                bool result = await _gameService.LeaveGameAsync(message.Chat.Id);
-                await botClient.SendMessage(message.Chat.Id, "Ви вийшли з гри.", replyMarkup: roomsKeyboardMarkup);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                await botClient.SendMessage(message.Chat.Id, ex.Message);
-                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
-            }
-            catch (Exception ex)
-            {
-                await botClient.SendMessage(message.Chat.Id, $"Помилка при виході з гри: {ex.Message}");
-            }
-        }
         private async Task HandleRollDice(ITelegramBotClient botClient, Message message)
         {
             try
@@ -463,6 +446,23 @@ namespace MonopolyBot
             catch (Exception ex)
             {
                 await botClient.SendMessage(message.Chat.Id, $"Помилка при завершенні дії: {ex.Message}");
+            }
+        }
+        private async Task HandleLeaveGame(ITelegramBotClient botClient, Message message)
+        {
+            try
+            {
+                await _gameService.LeaveGameAsync(message.Chat.Id);
+                await SendLeaveGameMessageAsync(botClient, message.Chat.Id);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, $"Помилка при виході з гри: {ex.Message}");
             }
         }
         private async Task HandleEndWatchGame(ITelegramBotClient botClient, Message message)
@@ -774,10 +774,14 @@ namespace MonopolyBot
             }
             players = players.Substring(0, players.Length - 2);
             string text = $"Кімната {room.RoomId}\n" +
-                $"Максимальна кількість гравців - {room.MaxNumberOfPlayers}\n" +
-                $"Гравці в кімнаті: {players}\n" +
-                $"Пароль: {room.HavePassword}\n" +
-                $"В грі: {room.InGame}";
+                $"Максимальна кількість гравців - {room.MaxNumberOfPlayers}\n";
+            if (room.Players.Count != 0) text += $"Гравці в кімнаті: {players}\n";
+            else text += "Гравці в кімнаті: Відсутні\n";
+            if (room.HavePassword) text += "Пароль: Не встановлено\n";
+            else text += "Пароль: Встановлено\n";
+            if (room.InGame) text += "Гра в кімнаті: Так\n";
+            else text += "Гра в кімнаті: Ні\n";
+            
             return text;
         }
         private async Task SendGameMessage(ITelegramBotClient botClient, long chatId, GameResponse game)
@@ -859,9 +863,10 @@ namespace MonopolyBot
         private async Task SendStartGameMessageAsync(ITelegramBotClient botClient, RoomResponse room)
         {
             List<Task> tasks = new List<Task>();
-            foreach(var player in room.Players)
+            var usersInGame = await _userRepository.ReadUsersWithGameId(room.RoomId);
+
+            foreach (var user in usersInGame)
             {
-                var user = await _userRepository.ReadUserWithId(player.Id);
                 InlineKeyboardMarkup keyboardMarkup = new
                             (
                                 InlineKeyboardButton.WithCallbackData("Game Status", $"GameStatus:{room.RoomId}")
@@ -877,16 +882,33 @@ namespace MonopolyBot
             List<Task> tasks = new List<Task>();
 
             var thisUser = await _userRepository.ReadUserWithChatId(chatId);
-            GameResponse game = await _gameService.GameStatusAsync(chatId);
+            var usersInGame = await _userRepository.ReadUsersWithGameId(thisUser.GameId);
 
-            foreach (var player in game.Players)
+            foreach (var user in usersInGame)
             {
                 Task task;
-                var user = await _userRepository.ReadUserWithId(player.Id);
-                if(user.ChatId == chatId)
-                    task = botClient.SendMessage(user.ChatId, "Ваша дія завершена. Перевірте статус гри для отримання результатів.", replyMarkup: gameKeyboardMarkup);
+                if(user.ChatId != chatId)
+                    task = botClient.SendMessage(user.ChatId, $"{thisUser.Name} завершив свою дію. Перевірте статус гри для отримання результатів.");
                 else
-                    task = botClient.SendMessage( user.ChatId, $"{thisUser.Name} завершив свою дію. Перевірте статус гри для отримання результатів.", replyMarkup: gameKeyboardMarkup);
+                    task = botClient.SendMessage(user.ChatId, "Ваша дія завершена. Перевірте статус гри для отримання результатів.");
+                tasks.Add(task);
+            }
+            await Task.WhenAll(tasks);
+        }
+        private async Task SendLeaveGameMessageAsync(ITelegramBotClient botClient, long chatId)
+        {
+            List<Task> tasks = new List<Task>();
+
+            var thisUser = await _userRepository.ReadUserWithChatId(chatId);
+            var usersInGame = await _userRepository.ReadUsersWithGameId(thisUser.GameId);
+
+            foreach (var user in usersInGame)
+            {
+                Task task;
+                if (user.ChatId != chatId)
+                    task = botClient.SendMessage(user.ChatId, $"{thisUser.Name} вийшов з гри. Перевірте статус гри для отримання результатів.");
+                else
+                    task = botClient.SendMessage(chatId, "Ви вийшли з гри.", replyMarkup: roomsKeyboardMarkup);
                 tasks.Add(task);
             }
             await Task.WhenAll(tasks);

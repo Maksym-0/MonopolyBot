@@ -63,6 +63,30 @@ namespace MonopolyBot.Database
             await _connection.CloseAsync();
             return user;
         }
+        public async Task<List<User>> ReadUsersWithGameId(string gameId)
+        {
+            var sql = $"SELECT * FROM public.\"{Constants.UserTable}\" " +
+                $"WHERE \"GameId\" = @gameId";
+
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
+
+            cmd.Parameters.AddWithValue("gameId", gameId);
+
+            await _connection.OpenAsync();
+            NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
+            if (!await npgsqlData.ReadAsync())
+            {
+                await _connection.CloseAsync();
+                throw new Exception("Користувачів не знайдено");
+            }
+            List<User> users = new List<User>();
+            do
+            {
+                users.Add(ConstructUser(npgsqlData));
+            } while (await npgsqlData.ReadAsync());
+            return users;
+        }
         public async Task UpdateUserGameId(long chatId, string? gameId)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.UserTable}\" " +
