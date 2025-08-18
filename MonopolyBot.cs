@@ -10,6 +10,7 @@ using MonopolyBot.Interface;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
+using System.Threading.Tasks;
 
 namespace MonopolyBot
 {
@@ -452,8 +453,12 @@ namespace MonopolyBot
         {
             try
             {
+                var thisUser = await _userRepository.ReadUserWithChatId(message.Chat.Id);
                 await _gameService.LeaveGameAsync(message.Chat.Id);
-                await SendLeaveGameMessageAsync(botClient, message.Chat.Id);
+                if(thisUser.GameId != null)
+                    await SendLeaveGameMessageAsync(botClient, message.Chat.Id, thisUser.GameId);
+                else
+                    throw new Exception("Ви не в грі, тому не можете вийти з неї.");
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -805,24 +810,26 @@ namespace MonopolyBot
                 string cellInfo = "";
                 if (cell.Unique)
                 {
-                    cellInfo = $"{cell.Number}: {cell.Name} - Особлива клітина\n";
+                    cellInfo = $"<b>{cell.Number}: {cell.Name}</b> - 🌀 <i>Особлива клітина</i>\n";
                     if (playersOnCell.Count > 0)
-                        cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
+                        cellInfo += $"👥 <i>Гравці на клітині:</i> {string.Join(", ", playersOnCell)}\n";
                     else
-                        cellInfo += "Гравців на клітині немає.\n";
+                        cellInfo += "👥 Немає гравців\n";
                 }
                 else
                 {
-                    cellInfo = $"{cell.Number}: {cell.Name} - Належить: {cell.Owner ?? "Нікому"}\n";
+                    cellInfo = $"<b>{cell.Number}: {cell.Name}</b>\n" +
+                        $"Власник: {cell.Owner ?? "Нікому"}\n";
+                    
                     if (cell.Owner == null)
-                        cellInfo += $"Вартість придбання: {cell.Price}$. Орендна плата: {cell.Rent}$\n";
+                        cellInfo += $"💰 Купівля: <b>{cell.Price}$</b>. Рента: <b>{cell.Rent}$</b>\n";
                     else
-                        cellInfo += $"Орендна плата: {cell.Rent}$\n";
+                        cellInfo += $"💸 Рента: <b>{cell.Rent}$</b>\n";
                     if (playersOnCell.Count > 0)
-                        cellInfo += $"Гравці на клітині: {string.Join(", ", playersOnCell)}\n";
+                        cellInfo += $"👥 <i>Гравці:</i> {string.Join(", ", playersOnCell)}\n";
                     else
-                        cellInfo += "Гравців на клітині немає.\n";
-                    cellInfo += $"Рівень: {cell.Level}\n";
+                        cellInfo += "👥 Немає гравців\n";
+                    cellInfo += $"📈 Рівень: {cell.Level}\n";
                 }
                 
                 if(cellBlock.Length + cellInfo.Length > maxMessageLength)
@@ -839,9 +846,11 @@ namespace MonopolyBot
             string playerBlock = "";
             foreach (var player in game.Players)
             {
-                string playerInfo = $"{player.Name} - {player.Balance}$. В грі: {player.InGame}\n" +
-                    $"Статус ходу: {player.HisAction}\n" +
-                    $"Клітина перебування: {player.Location}\n\n";
+                string playerInfo = 
+                    $"<b>{player.Name}</b> - 💵 <b>{player.Balance}$</b>\n" +
+                    $"🎲 У грі: {(player.InGame ? "✅" : "❌")}\n" +
+                    $"➡️ Статус ходу: {player.HisAction}\n" +
+                    $"📍 Клітина перебування: {player.Location}\n\n";
 
                 if(playerBlock.Length + playerInfo.Length >= maxMessageLength)
                 {
@@ -851,14 +860,19 @@ namespace MonopolyBot
                 else
                     playerBlock += playerInfo;
             }
-            if(!string.IsNullOrEmpty(playerBlock))
-                playerMessages.Add(playerBlock);
+            if (!string.IsNullOrEmpty(playerBlock))
+            { 
+                playerMessages.Add(playerBlock); 
+            }
 
             foreach (string msg in cellMessages)
-                await botClient.SendMessage(chatId, msg);
-
+            { 
+                await botClient.SendMessage(chatId, msg, parseMode: ParseMode.Html); 
+            }
             foreach (string msg in playerMessages)
-                await botClient.SendMessage(chatId, msg);
+            { 
+                await botClient.SendMessage(chatId, msg, parseMode: ParseMode.Html); 
+            }
         }
         private async Task SendStartGameMessageAsync(ITelegramBotClient botClient, RoomResponse room)
         {
@@ -895,20 +909,20 @@ namespace MonopolyBot
             }
             await Task.WhenAll(tasks);
         }
-        private async Task SendLeaveGameMessageAsync(ITelegramBotClient botClient, long chatId)
+        private async Task SendLeaveGameMessageAsync(ITelegramBotClient botClient, long chatId, string gameId)
         {
             List<Task> tasks = new List<Task>();
+            Task task;
 
             var thisUser = await _userRepository.ReadUserWithChatId(chatId);
-            var usersInGame = await _userRepository.ReadUsersWithGameId(thisUser.GameId);
+            var usersInGame = await _userRepository.ReadUsersWithGameId(gameId);
+            
+            task = botClient.SendMessage(chatId, "Ви вийшли з гри.", replyMarkup: roomsKeyboardMarkup);
+            tasks.Add(task);
 
             foreach (var user in usersInGame)
             {
-                Task task;
-                if (user.ChatId != chatId)
-                    task = botClient.SendMessage(user.ChatId, $"{thisUser.Name} вийшов з гри. Перевірте статус гри для отримання результатів.");
-                else
-                    task = botClient.SendMessage(chatId, "Ви вийшли з гри.", replyMarkup: roomsKeyboardMarkup);
+                task = botClient.SendMessage(user.ChatId, $"{thisUser.Name} вийшов з гри. Перевірте статус гри для отримання результатів.");
                 tasks.Add(task);
             }
             await Task.WhenAll(tasks);
