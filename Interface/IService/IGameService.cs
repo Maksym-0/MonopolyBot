@@ -1,23 +1,17 @@
-﻿using MonopolyBot.Interface.IClient;
-using MonopolyBot.Interface.IRepository;
+﻿using MonopolyBot.Models.ApiResponse;
 using MonopolyBot.Models.API.ApiResponse;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MonopolyBot.Interface
 {
     internal interface IGameService
     {
-        public Task<GameResponse> GameStatusAsync(long chatId);
-        public Task<bool> RollDiceAsync(long chatId);
-        public Task<bool> PayAsync(long chatId);
-        public Task<bool> BuyCellAsync(long chatId);
-        public Task<bool> LevelUpCellAsync(long chatId, int cellNumber);
-        public Task<bool> LevelDownCellAsync(long chatId, int cellNumber);
-        public Task<bool> EndActionAsync(long chatId);
-        public Task<bool> LeaveGameAsync(long chatId);
+        public Task<GameDto> GameStatusAsync(long chatId);
+        public Task<MoveDto> RollDiceAsync(long chatId);
+        public Task<PayDto> PayAsync(long chatId);
+        public Task<BuyDto> BuyCellAsync(long chatId);
+        public Task<LevelChangeDto> LevelUpCellAsync(long chatId, int cellNumber);
+        public Task<LevelChangeDto> LevelDownCellAsync(long chatId, int cellNumber);
+        public Task<NextActionDto> EndActionAsync(long chatId);
+        public Task<LeaveGameDto> LeaveGameAsync(long chatId);
     }
 }

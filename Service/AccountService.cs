@@ -73,7 +73,7 @@ namespace MonopolyBot.Service
                 {
                     await _userRepository.DeleteUserWithChatId(chatId);
                 }
-                ApiResponse<AccountResponse> accountResponse = await _accountClient.MeAsync(data.Data);
+                ApiResponse<AccountDto> accountResponse = await _accountClient.MeAsync(data.Data);
                 var handler = new JwtSecurityTokenHandler();
                 var token = handler.ReadJwtToken(data.Data);
                 await _userRepository.InsertUser(new User()

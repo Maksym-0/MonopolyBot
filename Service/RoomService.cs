@@ -19,21 +19,21 @@ namespace MonopolyBot.Service
             _userRepository = userRepository;
         }
 
-        public async Task<List<RoomResponse>> GetRoomsAsync(long chatId)
+        public async Task<List<RoomDto>> GetRoomsAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
 
-            ApiResponse<List<RoomResponse>> response = await _roomClient.GetRoomsAsync(user.JWT);
+            ApiResponse<List<RoomDto>> response = await _roomClient.GetRoomsAsync(user.JWT);
             if (!response.Success)
                 throw new Exception(response.Message);
 
             return response.Data;
         }
-        public async Task<RoomResponse> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password)
+        public async Task<RoomDto> CreateRoomAsync(long chatId, int maxNumberOfPlayers, string? password)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
 
-            ApiResponse<RoomResponse> response = await _roomClient.CreateRoomAsync(user.JWT, new Models.API.ApiRequest.CreateRoomRequest
+            ApiResponse<RoomDto> response = await _roomClient.CreateRoomAsync(user.JWT, new Models.API.ApiRequest.CreateRoomRequest
             {
                 MaxNumberOfPlayers = maxNumberOfPlayers,
                 Password = password
@@ -44,11 +44,11 @@ namespace MonopolyBot.Service
 
             return response.Data;
         }
-        public async Task<RoomResponse> JoinRoomAsync(long chatId, string roomId, string? password)
+        public async Task<RoomDto> JoinRoomAsync(long chatId, string roomId, string? password)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
 
-            ApiResponse<RoomResponse> response = await _roomClient.JoinRoomAsync(user.JWT, new Models.API.ApiRequest.JoinRoomRequest
+            ApiResponse<RoomDto> response = await _roomClient.JoinRoomAsync(user.JWT, new Models.API.ApiRequest.JoinRoomRequest
             {
                 RoomId = roomId,
                 Password = password
@@ -65,7 +65,7 @@ namespace MonopolyBot.Service
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
 
-            ApiResponse<RoomResponse> response = await _roomClient.QuitRoomAsync(user.JWT);
+            ApiResponse<RoomDto> response = await _roomClient.QuitRoomAsync(user.JWT);
 
             if (!response.Success)
                 throw new Exception(response.Message);

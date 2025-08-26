@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MonopolyBot.Models.API.ApiResponse
 {
-    internal class AccountResponse
+    internal class AccountDto
     {
         public string Id { get; set; }
         public string Name { get; set; }

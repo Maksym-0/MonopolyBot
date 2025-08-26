@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MonopolyBot.Models.API.ApiResponse
+﻿namespace MonopolyBot.Models.API.ApiResponse
 {
-    internal class RoomResponse
+    internal class RoomDto
     {
         public string RoomId { get; set; }
         public int MaxNumberOfPlayers { get; set; }

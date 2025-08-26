@@ -4,6 +4,7 @@ using MonopolyBot.Interface.IClient;
 using MonopolyBot.Interface.IRepository;
 using MonopolyBot.Models.API.ApiResponse;
 using MonopolyBot.Models.Bot;
+using MonopolyBot.Models.ApiResponse;
 
 namespace MonopolyBot.Service
 {
@@ -20,7 +21,7 @@ namespace MonopolyBot.Service
             _userRepository = userRepository;
         }
 
-        public async Task<GameResponse> GameStatusAsync(long chatId)
+        public async Task<GameDto> GameStatusAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.GetGameStatusAsync(user.JWT, user.GameId);
@@ -30,7 +31,7 @@ namespace MonopolyBot.Service
             }
             return response.Data;
         }
-        public async Task<bool> RollDiceAsync(long chatId)
+        public async Task<MoveDto> RollDiceAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.RollTheDiceAsync(user.JWT, user.GameId);
@@ -38,9 +39,9 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося кинути кубики: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
-        public async Task<bool> PayAsync(long chatId)
+        public async Task<PayDto> PayAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.PayAsync(user.JWT, user.GameId);
@@ -48,9 +49,9 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося здійснити платіж: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
-        public async Task<bool> BuyCellAsync(long chatId)
+        public async Task<BuyDto> BuyCellAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.BuyCellAsync(user.JWT, user.GameId);
@@ -58,9 +59,9 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося купити клітинку: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
-        public async Task<bool> LevelUpCellAsync(long chatId, int cellNumber)
+        public async Task<LevelChangeDto> LevelUpCellAsync(long chatId, int cellNumber)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.LevelUpCellAsync(user.JWT, user.GameId, cellNumber);
@@ -68,9 +69,9 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося підвищити рівень клітинки: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
-        public async Task<bool> LevelDownCellAsync(long chatId, int cellNumber)
+        public async Task<LevelChangeDto> LevelDownCellAsync(long chatId, int cellNumber)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.LevelDownCellAsync(user.JWT, user.GameId, cellNumber);
@@ -78,9 +79,9 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося знизити рівень клітинки: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
-        public async Task<bool> EndActionAsync(long chatId)
+        public async Task<NextActionDto> EndActionAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
             var response = await _gameClient.EndActionAsync(user.JWT, user.GameId);
@@ -88,9 +89,9 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося завершити дію: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
-        public async Task<bool> LeaveGameAsync(long chatId)
+        public async Task<LeaveGameDto> LeaveGameAsync(long chatId)
         {
             User user = await _authorization.GetAuthorizedUserAsync(chatId);
 
@@ -99,7 +100,7 @@ namespace MonopolyBot.Service
 
             var response = await _gameClient.LeaveGameAsync(user.JWT, user.GameId);
             if (response.Success)
-            {
+            { 
                 user.GameId = null;
                 await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
             }
@@ -107,7 +108,7 @@ namespace MonopolyBot.Service
             {
                 throw new Exception($"Не вдалося вийти з гри: {response.Message}");
             }
-            return response.Success;
+            return response.Data;
         }
     }
 }
