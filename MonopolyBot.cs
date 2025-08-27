@@ -353,14 +353,16 @@ namespace MonopolyBot
             {
                 MoveDto result = await _gameService.RollDiceAsync(message.Chat.Id);
 
+                string dublResult = result.Player.LastDiceResult.Dubl ? "\n🔥 Ви викинули дубль! Маєте додатковий хід" : "";
+
                 string selfMessage = 
-                    $"🎲 Ви кинули кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2}.\n" +
+                    $"🎲 Ви кинули кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{dublResult}\n" +
                     $"Ви пересунулись на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n\n" +
                     $"{result.CellMessage}\n\n" +
                     "Перевірте статус гри для деталей.";
                 
                 string othersMessage = 
-                    $"🎲 {result.Player.Name} кинув кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2}.\n" +
+                    $"🎲 {result.Player.Name} кинув кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{dublResult}\n" +
                     $"Перейшов на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n\n" +
                     $"{result.CellMessage}\n\n" +
                     "Перевірте статус гри для деталей.";
@@ -923,13 +925,22 @@ namespace MonopolyBot
             string playerBlock = "";
             foreach (var player in game.Players)
             {
-                string playerInfo = 
-                    $"<b>{player.Name}</b> - 💵 <b>{player.Balance}$</b>\n" +
-                    $"🎲 У грі: {(player.InGame ? "✅" : "❌")}\n" +
-                    $"➡️ Статус ходу: {player.HisAction}\n" +
-                    $"📍 Клітина перебування: {player.Location}\n\n";
+                string playerInfo =
+                    $"<b>{player.Name}</b> — 💵 <b>{player.Balance}$</b>\n" +
+                    $"📍 Клітина: {player.Location} ({game.Cells[player.Location].Name})\n" +
+                    (player.LastDiceResult != null
+                    ? $"🎲 Кубики: {player.LastDiceResult.Dice1}+{player.LastDiceResult.Dice2} = {player.LastDiceResult.DiceSum}" +
+                    (player.LastDiceResult.Dubl ? " (Дубль!)" : "") + "\n"
+                    : "") +
+                    (player.IsPrisoner ? "🚔 У в’язниці\n" : "") +
+                    (player.CantAction > 0 ? $"⏳ Пропускає {player.CantAction} ходів\n" : "") +
+                    (player.ReverseMove > 0 ? $"↩️ Рух назад на {player.ReverseMove}\n" : "") +
+                    (player.NeedPay ? "💸 Треба оплатити борг\n" : "") +
+                    (player.CanBuyCell ? "🛒 Може купити клітину\n" : "") +
+                    (player.CanLevelUpCell ? "⬆️ Може прокачати клітину\n" : "") +
+                    (player.HisAction ? "➡️ Зараз його хід\n" : "");
 
-                if(playerBlock.Length + playerInfo.Length >= maxMessageLength)
+                if (playerBlock.Length + playerInfo.Length >= maxMessageLength)
                 {
                     playerMessages.Add(playerBlock);
                     playerBlock = playerInfo;

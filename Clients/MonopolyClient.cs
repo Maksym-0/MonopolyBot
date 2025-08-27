@@ -1,4 +1,4 @@
-﻿using Monopoly.Models.ApiResponse;
+﻿using MonopolyBot.Models.ApiResponse;
 using MonopolyBot.Interface.IClient;
 using MonopolyBot.Models.API.ApiRequest;
 using MonopolyBot.Models.API.ApiResponse;

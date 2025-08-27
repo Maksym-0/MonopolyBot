@@ -1,6 +1,4 @@
-﻿using Telegram.Bot.Types;
-
-namespace MonopolyBot.Models
+﻿namespace MonopolyBot.Models
 {
     public class Player
     {
