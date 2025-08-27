@@ -850,8 +850,8 @@ namespace MonopolyBot
                 $"Максимальна кількість гравців - {room.MaxNumberOfPlayers}\n";
             if (room.Players.Count != 0) text += $"Гравці в кімнаті: {players}\n";
             else text += "Гравці в кімнаті: Відсутні\n";
-            if (room.HavePassword) text += "Пароль: Не встановлено\n";
-            else text += "Пароль: Встановлено\n";
+            if (room.HavePassword) text += "Пароль: Встановлено\n";
+            else text += "Пароль: Не встановлено\n";
             if (room.InGame) text += "Гра в кімнаті: Так\n";
             else text += "Гра в кімнаті: Ні\n";
             
