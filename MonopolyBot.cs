@@ -358,13 +358,13 @@ namespace MonopolyBot
 
                 string selfMessage = 
                     $"🎲 Ви кинули кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{selfDublResult}\n" +
-                    $"Ви пересунулись на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n\n" +
+                    $"Ви пересунулись на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n" +
                     $"{result.CellMessage}\n\n" +
                     "Перевірте статус гри для деталей.";
                 
                 string othersMessage = 
                     $"🎲 {result.Player.Name} кинув кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{othersDublResult}\n" +
-                    $"Перейшов на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n\n" +
+                    $"Перейшов на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n" +
                     $"{result.CellMessage}\n\n" +
                     "Перевірте статус гри для деталей.";
 
@@ -392,7 +392,8 @@ namespace MonopolyBot
                     $"{(result.HasMonopoly ? "🎉 У вас тепер монополія!" : "Монополії ще немає.")}";
 
                 string othersMessage = 
-                    $"{result.PlayerName} придбав клітину №{result.CellNumber} ({result.CellName}) [{result.CellMonopolyType}]. " +
+                    $"{result.PlayerName} придбав клітину №{result.CellNumber} ({result.CellName}) [{result.CellMonopolyType}] за {result.Price}. " +
+                    $"Баланс: {result.OldBalance} → {result.NewBalance}.\n" +
                     $"{(result.HasMonopoly ? "Тепер у нього монополія!" : "")}";
 
                 await SendMessageToAllPlayersAsync(botClient, message.Chat.Id, selfMessage, othersMessage);
@@ -419,12 +420,18 @@ namespace MonopolyBot
 
                 if (result.ReceiverId != null)
                 {
+                    selfMessage = $"Оплата {result.Amount}$ на рахунок {result.ReceiverName} здійснена.\n" +
+                        $"Ваш баланс: {result.NewPlayerBalance}$" +
+                        $"Баланс {result.ReceiverName}: {result.NewReceiverBalance}";
+
                     othersMessage = $"{result.PlayerName} сплатив {result.Amount}$ гравцю {result.ReceiverName}. " +
                         $"{result.PlayerName} баланс: {result.NewPlayerBalance}$, " +
                         $"{result.ReceiverName} баланс: {result.NewReceiverBalance}$";
                 }
                 else
                 {
+                    selfMessage = $"Оплата {result.Amount}$ за вихід з тюрми здійснена. Ваш баланс: {result.NewPlayerBalance}$";
+
                     othersMessage = $"{result.PlayerName} сплатив за вихід з тюрми {result.Amount}$. " +
                         $"{result.PlayerName} баланс: {result.NewPlayerBalance}$";
                 }
@@ -513,14 +520,16 @@ namespace MonopolyBot
                 {
                     selfMessage = $"Ви вийшли з гри.\nГру завершено. Переможець: {result.Winner.Name}.";
                     othersMessage = $"{thisUser.Name} вийшов з гри.\nГру завершено. Переможець: {result.Winner.Name}.";
+
+                    await SendLeaveGameMessageAsync(botClient, message.Chat.Id, thisUser.GameId, selfMessage, othersMessage, roomsKeyboardMarkup);
                 }
                 else
                 {
                     selfMessage = $"Ви вийшли з гри.\nЗалишилось гравців: {result.RemainingPlayers}.";
                     othersMessage = $"{thisUser.Name} вийшов з гри.\nЗалишилось гравців: {result.RemainingPlayers}.";
+
+                    await SendLeaveGameMessageAsync(botClient, message.Chat.Id, thisUser.GameId, selfMessage, othersMessage);
                 }
-                
-                await SendLeaveGameMessageAsync(botClient, message.Chat.Id, thisUser.GameId, selfMessage, othersMessage);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -911,7 +920,9 @@ namespace MonopolyBot
                         cellInfo += "👥 Немає гравців\n";
                     cellInfo += $"📈 Рівень: {cell.Level}\n";
                 }
-                
+
+                cellBlock += "\n";
+
                 if(cellBlock.Length + cellInfo.Length > maxMessageLength)
                 {
                     cellMessages.Add(cellBlock);
@@ -929,17 +940,21 @@ namespace MonopolyBot
                 string playerInfo =
                     $"<b>{player.Name}</b> — 💵 <b>{player.Balance}$</b>\n" +
                     $"📍 Клітина: {player.Location} ({game.Cells[player.Location].Name})\n" +
-                    (player.LastDiceResult != null
-                    ? $"🎲 Кубики: {player.LastDiceResult.Dice1}+{player.LastDiceResult.Dice2} = {player.LastDiceResult.DiceSum}" +
-                    (player.LastDiceResult.Dubl ? " (Дубль!)" : "") + "\n"
-                    : "") +
+                    (player.LastDiceResult != null ? $"🎲 Кубики: {player.LastDiceResult.Dice1}+{player.LastDiceResult.Dice2} = {player.LastDiceResult.DiceSum}" +
+                    (player.LastDiceResult.Dubl ? " (Дубль!)" : "") + "\n" : "") +
                     (player.IsPrisoner ? "🚔 У в’язниці\n" : "") +
                     (player.CantAction > 0 ? $"⏳ Пропускає {player.CantAction} ходів\n" : "") +
                     (player.ReverseMove > 0 ? $"↩️ Рух назад на {player.ReverseMove}\n" : "") +
+
+                    "\n" +
+
+                    (player.HisAction ? "➡️ Зараз його хід\n" : "") +
+                    (player.CanMove ? "🎲 Необхідно кинути кубики\n" : "") +
                     (player.NeedPay ? "💸 Треба оплатити борг\n" : "") +
                     (player.CanBuyCell ? "🛒 Може купити клітину\n" : "") +
                     (player.CanLevelUpCell ? "⬆️ Може прокачати клітину\n" : "") +
-                    (player.HisAction ? "➡️ Зараз його хід\n" : "");
+                    
+                    "\n";
 
                 if (playerBlock.Length + playerInfo.Length >= maxMessageLength)
                 {
@@ -995,6 +1010,22 @@ namespace MonopolyBot
 
             await Task.WhenAll(tasks);
         }
+        private async Task SendLeaveGameMessageAsync(ITelegramBotClient botClient, long chatId, string gameId, string selfMessage, string othersMessage, ReplyKeyboardMarkup markup)
+        {
+            var tasks = new List<Task>();
+            var usersInGame = await _userRepository.ReadUsersWithGameId(gameId);
+
+            tasks.Add(botClient.SendMessage(chatId, selfMessage, replyMarkup: roomsKeyboardMarkup));
+
+            foreach (var user in usersInGame)
+            {
+                Task task = botClient.SendMessage(user.ChatId, othersMessage, replyMarkup: markup);
+                tasks.Add(task);
+            }
+
+            await Task.WhenAll(tasks);
+        }
+        
         private async Task SendMessageToAllPlayersAsync(ITelegramBotClient botClient, long chatId, string selfMessage, string othersMessage)
         {
             List<Task> tasks = new List<Task>();
