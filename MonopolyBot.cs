@@ -36,7 +36,7 @@ namespace MonopolyBot
                     new[]
                         {
                         new KeyboardButton [] {"Create Room", "View Rooms"},
-                        new KeyboardButton [] { "Profile" }
+                        new KeyboardButton [] { "Profile", "Accounts menu" }
                         }
                     )
         {
@@ -149,7 +149,10 @@ namespace MonopolyBot
                 case "Profile":
                     await HandleMe(botClient, message);
                     return;
-                
+                case "Rooms menu":
+                    await HandleRoomsMenu(botClient, message);
+                    return;
+
                 case "Create Room":
                     await HandleCreateRoom(botClient, message);
                     return;
@@ -246,6 +249,11 @@ namespace MonopolyBot
             await _chatRepository.InsertChatStatus(new ChatStatus(message.Chat.Id) { IsAwaitingLogin = true });
             await botClient.SendMessage(message.Chat.Id, "Вхід в обліковий запис розпочато. Введіть ім'я:");
         }
+        private async Task HandleRoomsMenu(ITelegramBotClient botClient, Message message)
+        {
+            await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: roomsKeyboardMarkup);
+        }
+        
         private async Task HandleMe(ITelegramBotClient botClient, Message message)
         {
             try
