@@ -10,6 +10,7 @@
         public int CantAction { get; set; }
         public int ReverseMove { get; set; }
         public Dice LastDiceResult { get; set; }
+        public int CountOfDubles { get; set; }
         public bool IsPrisoner { get; set; }
         public bool InGame { get; set; }
         public bool NeedPay { get; set; }

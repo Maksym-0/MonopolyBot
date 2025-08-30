@@ -361,20 +361,42 @@ namespace MonopolyBot
             {
                 MoveDto result = await _gameService.RollDiceAsync(message.Chat.Id);
 
-                string selfDublResult = result.Player.LastDiceResult.Dubl ? "\n🔥 Ви викинули дубль! Маєте додатковий хід" : "";
-                string othersDublResult = result.Player.LastDiceResult.Dubl ? "\n🔥 Викинуто дубль! Гравець має додатковий хід" : "";
+                string selfMessage;
+                string othersMessage;
 
-                string selfMessage = 
-                    $"🎲 Ви кинули кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{selfDublResult}\n" +
-                    $"Ви пересунулись на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n" +
-                    $"{result.CellMessage}\n\n" +
-                    "Перевірте статус гри для деталей.";
-                
-                string othersMessage = 
-                    $"🎲 {result.Player.Name} кинув кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{othersDublResult}\n" +
-                    $"Перейшов на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n" +
-                    $"{result.CellMessage}\n\n" +
-                    "Перевірте статус гри для деталей.";
+                string selfDublResult;
+                string othersDublResult;
+
+                if(result.Player.LastDiceResult.Dubl && result.Player.CountOfDubles == 3)
+                {
+                    selfDublResult = "\n💥 Це був ваш третій дубль підряд! Ви відправляєтесь до тюрми.";
+                    othersDublResult = "\n💥 Це був його третій дубль підряд! Він відправляється до тюрми.";
+
+                    selfMessage =
+                        $"🎲 Ви кинули кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{selfDublResult}\n\n" +
+                        "Перевірте статус гри для деталей.";
+
+                    othersMessage =
+                        $"🎲 {result.Player.Name} кинув кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{othersDublResult}\n\n" +
+                        "Перевірте статус гри для деталей.";
+                }
+                else
+                {
+                    selfDublResult = result.Player.LastDiceResult.Dubl ? $"\n🔥 Ви викинули дубль №{result.Player.CountOfDubles}! Маєте додатковий хід" : "";
+                    othersDublResult = result.Player.LastDiceResult.Dubl ? $"\n🔥 Викинуто дубль №{result.Player.CountOfDubles}! Гравець має додатковий хід" : "";
+
+                    selfMessage =
+                        $"🎲 Ви кинули кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{selfDublResult}\n" +
+                        $"Ви пересунулись на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n" +
+                        $"{result.CellMessage}\n\n" +
+                        "Перевірте статус гри для деталей.";
+
+                    othersMessage =
+                        $"🎲 {result.Player.Name} кинув кубики: {result.Player.LastDiceResult.Dice1} + {result.Player.LastDiceResult.Dice2} = {result.Player.LastDiceResult.DiceSum}.{othersDublResult}\n" +
+                        $"Перейшов на клітинку *{result.Cell.Name}* (#{result.Cell.Number}).\n" +
+                        $"{result.CellMessage}\n\n" +
+                        "Перевірте статус гри для деталей.";
+                }
 
                 await SendMessageToAllPlayersAsync(botClient, message.Chat.Id, selfMessage, othersMessage);
             }
