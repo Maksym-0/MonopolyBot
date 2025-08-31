@@ -15,5 +15,6 @@ namespace MonopolyBot.Interface
         public Task<AccServiceResponse> GetMyDataAsync(long chatId);
         public Task<string> RegisterAsync(string name, string password);
         public Task<AccServiceResponse> LoginAsync(long chatId, string name, string password);
+        public Task<AccServiceResponse> DeleteAccountAsync(string name, string password);
     }
 }

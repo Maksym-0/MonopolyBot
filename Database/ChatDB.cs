@@ -8,10 +8,10 @@ namespace MonopolyBot.Database
     {
         public async Task InsertChatStatus(ChatStatus status)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.ChatStatusTable}\" (\"ChatId\", \"IsAwaitingLogin\", \"IsAwaitingRegister\", \"IsAwaitingJoinRoom\", \"IsAwaitingCreateRoom\", \"IsAwaitingLevelUpCell\", \"IsAwaitingLevelDownCell\", \"AccountName\", \"RoomId\", \"MaxNumberOfPlayers\") " +
-                $"VALUES (@chatId, @isAwaitingLogin, @isAwaitingRegister, @isAwaitingJoinRoom, @isAwaitingCreateRoom, @isAwaitingLevelUpCell, @isAwaitingLevelDownCell, @accountName, @roomId, @maxNumberOfPlayers) " +
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.ChatStatusTable}\" (\"ChatId\", \"IsAwaitingLogin\", \"IsAwaitingRegister\", \"IsAwaitingDeleteAccount\", \"IsAwaitingJoinRoom\", \"IsAwaitingCreateRoom\", \"IsAwaitingLevelUpCell\", \"IsAwaitingLevelDownCell\", \"AccountName\", \"RoomId\", \"MaxNumberOfPlayers\") " +
+                $"VALUES (@chatId, @isAwaitingLogin, @isAwaitingRegister, @isAwaitingDeleteAccount, @isAwaitingJoinRoom, @isAwaitingCreateRoom, @isAwaitingLevelUpCell, @isAwaitingLevelDownCell, @accountName, @roomId, @maxNumberOfPlayers) " +
                 $"ON CONFLICT (\"ChatId\") " +
-                $"DO UPDATE SET \"IsAwaitingLogin\" = @isAwaitingLogin, \"IsAwaitingRegister\" = @isAwaitingRegister, \"IsAwaitingJoinRoom\" = @isAwaitingJoinRoom, \"IsAwaitingCreateRoom\" = @isAwaitingCreateRoom, \"IsAwaitingLevelUpCell\" = @isAwaitingLevelUpCell, \"IsAwaitingLevelDownCell\" = @isAwaitingLevelDownCell, \"AccountName\" = @accountName, \"RoomId\" = @roomId, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers";
+                $"DO UPDATE SET \"IsAwaitingLogin\" = @isAwaitingLogin, \"IsAwaitingRegister\" = @isAwaitingRegister, \"IsAwaitingDeleteAccount\" = @isAwaitingDeleteAccount, \"IsAwaitingJoinRoom\" = @isAwaitingJoinRoom, \"IsAwaitingCreateRoom\" = @isAwaitingCreateRoom, \"IsAwaitingLevelUpCell\" = @isAwaitingLevelUpCell, \"IsAwaitingLevelDownCell\" = @isAwaitingLevelDownCell, \"AccountName\" = @accountName, \"RoomId\" = @roomId, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
@@ -23,7 +23,7 @@ namespace MonopolyBot.Database
         }
         public async Task<ChatStatus?> ReadChatStatus(long chatId)
         {
-            var sql = $"SELECT \"ChatId\", \"IsAwaitingLogin\", \"IsAwaitingRegister\", \"IsAwaitingJoinRoom\", \"IsAwaitingCreateRoom\", \"IsAwaitingLevelUpCell\", \"IsAwaitingLevelDownCell\", \"AccountName\", \"RoomId\", \"MaxNumberOfPlayers\" " +
+            var sql = $"SELECT \"ChatId\", \"IsAwaitingLogin\", \"IsAwaitingRegister\", \"IsAwaitingDeleteAccount\", \"IsAwaitingJoinRoom\", \"IsAwaitingCreateRoom\", \"IsAwaitingLevelUpCell\", \"IsAwaitingLevelDownCell\", \"AccountName\", \"RoomId\", \"MaxNumberOfPlayers\" " +
                 $"FROM PUBLIC.\"{Constants.ChatStatusTable}\" " +
                 $"WHERE \"ChatId\" = @chatId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
@@ -45,7 +45,7 @@ namespace MonopolyBot.Database
         public async Task UpdateChatStatus(ChatStatus status)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.ChatStatusTable}\" " +
-                $"SET \"IsAwaitingLogin\" = @isAwaitingLogin, \"IsAwaitingRegister\" = @isAwaitingRegister, \"IsAwaitingJoinRoom\" = @isAwaitingJoinRoom, \"IsAwaitingCreateRoom\" = @isAwaitingCreateRoom, \"IsAwaitingLevelUpCell\" = @isAwaitingLevelUpCell, \"IsAwaitingLevelDownCell\" = @isAwaitingLevelDownCell, \"AccountName\" = @accountName, \"RoomId\" = @roomId, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers " +
+                $"SET \"IsAwaitingLogin\" = @isAwaitingLogin, \"IsAwaitingRegister\" = @isAwaitingRegister, \"IsAwaitingDeleteAccount\" = @isAwaitingDeleteAccount, \"IsAwaitingJoinRoom\" = @isAwaitingJoinRoom, \"IsAwaitingCreateRoom\" = @isAwaitingCreateRoom, \"IsAwaitingLevelUpCell\" = @isAwaitingLevelUpCell, \"IsAwaitingLevelDownCell\" = @isAwaitingLevelDownCell, \"AccountName\" = @accountName, \"RoomId\" = @roomId, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers " +
                 $"WHERE \"ChatId\" = @chatId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
@@ -75,6 +75,7 @@ namespace MonopolyBot.Database
             cmd.Parameters.AddWithValue("chatId", status.ChatId);
             cmd.Parameters.AddWithValue("isAwaitingLogin", status.IsAwaitingLogin);
             cmd.Parameters.AddWithValue("isAwaitingRegister", status.IsAwaitingRegister);
+            cmd.Parameters.AddWithValue("isAwaitingDeleteAccount", status.IsAwaitingDeleteAccount);
             cmd.Parameters.AddWithValue("isAwaitingJoinRoom", status.IsAwaitingJoinRoom);
             cmd.Parameters.AddWithValue("isAwaitingCreateRoom", status.IsAwaitingCreateRoom);
             cmd.Parameters.AddWithValue("isAwaitingLevelUpCell", status.IsAwaitingLevelUpCell);

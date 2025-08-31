@@ -24,8 +24,8 @@ namespace MonopolyBot
                     (
                     new[]
                         {
-                        new KeyboardButton [] {"Register", "Login"},
-                        new KeyboardButton [] { "Profile" }
+                        new KeyboardButton [] {"Register", "Login", "Delete Account"},
+                        new KeyboardButton [] { "Profile", "Rooms Menu" }
                         }
                     )
         {
@@ -149,6 +149,9 @@ namespace MonopolyBot
                 case "Profile":
                     await HandleMe(botClient, message);
                     return;
+                case "Delete Account":
+                    await HandleDeleteAccount(botClient, message);
+                    return;
                 case "Rooms menu":
                     await HandleRoomsMenu(botClient, message);
                     return;
@@ -207,6 +210,12 @@ namespace MonopolyBot
                     return;
                 }
                 else
+                if (status.IsAwaitingDeleteAccount)
+                {
+                    await HandleDeleteAccountStatus(botClient, message, status);
+                    return;
+                }
+                else
                 if (status.IsAwaitingJoinRoom)
                 {
                     await HandleJoinRoomStatus(botClient, message, status);
@@ -248,6 +257,25 @@ namespace MonopolyBot
         {
             await _chatRepository.InsertChatStatus(new ChatStatus(message.Chat.Id) { IsAwaitingLogin = true });
             await botClient.SendMessage(message.Chat.Id, "Вхід в обліковий запис розпочато. Введіть ім'я:");
+        }
+        private async Task HandleDeleteAccount(ITelegramBotClient botClient, Message message)
+        {
+            try
+            {
+                await _chatRepository.InsertChatStatus(new ChatStatus(message.Chat.Id) { IsAwaitingDeleteAccount = true });
+                await botClient.SendMessage(message.Chat.Id, "Видалення аккаунту розпочато. Введіть ім'я.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+                return;
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, $"Помилка при видаленні акаунту: {ex.Message}");
+                return;
+            }
         }
         private async Task HandleRoomsMenu(ITelegramBotClient botClient, Message message)
         {
@@ -626,6 +654,21 @@ namespace MonopolyBot
             {
                 string registerResult = await _accService.RegisterAsync(status.AccountName, message.Text);
                 await botClient.SendMessage(message.Chat.Id, registerResult);
+                await _chatRepository.DeleteChatStatus(message.Chat.Id);
+            }
+        }
+        private async Task HandleDeleteAccountStatus(ITelegramBotClient botClient, Message message, ChatStatus status)
+        {
+            if(status.AccountName == null)
+            {
+                status.AccountName = message.Text;
+                await _chatRepository.UpdateChatStatus(status);
+                await botClient.SendMessage(message.Chat.Id, "Введіть пароль для видалення акаунту:");
+            }
+            else
+            {
+                AccServiceResponse deleteResult = await _accService.DeleteAccountAsync(status.AccountName, message.Text);
+                await botClient.SendMessage(message.Chat.Id, deleteResult.Message);
                 await _chatRepository.DeleteChatStatus(message.Chat.Id);
             }
         }

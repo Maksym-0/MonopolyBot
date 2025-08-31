@@ -101,5 +101,31 @@ namespace MonopolyBot.Service
                 Message = data.Message
             };
         }
+        public async Task<AccServiceResponse> DeleteAccountAsync(string name, string password)
+        {
+            AccountRequest account = new AccountRequest()
+            {
+                Name = name,
+                Password = password
+            };
+            var data = await _accountClient.DeleteAccount(account);
+
+            if (data.Success)
+            {
+                return new AccServiceResponse()
+                {
+                    Success = data.Success,
+                    Message = data.Message
+                };
+            }
+            else
+            {
+                return new AccServiceResponse()
+                {
+                    Success = data.Success,
+                    Message = data.Message
+                };
+            }
+        }
     }
 }

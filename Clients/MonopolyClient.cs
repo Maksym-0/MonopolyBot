@@ -30,6 +30,12 @@ namespace MonopolyBot.Clients
             var apiResponse = JsonConvert.DeserializeObject<ApiResponse<string>>(responseJson);
             return apiResponse;
         }
+        public async Task<ApiResponse<object>> DeleteAccount(AccountRequest account)
+        {
+            string responseJson = await SendAccountRequestAsync(null, account, "/delete", HttpMethod.Delete);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<object>>(responseJson);
+            return apiResponse;
+        }
 
         public async Task<ApiResponse<List<RoomDto>>> GetRoomsAsync(string jwt)
         {
