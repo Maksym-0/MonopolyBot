@@ -90,14 +90,15 @@ namespace MonopolyBot.Database
             {
                 IsAwaitingLogin = npgsqlData.GetBoolean(1),
                 IsAwaitingRegister = npgsqlData.GetBoolean(2),
-                IsAwaitingJoinRoom = npgsqlData.GetBoolean(3),
-                IsAwaitingCreateRoom = npgsqlData.GetBoolean(4),
-                IsAwaitingLevelUpCell = npgsqlData.GetBoolean(5),
-                IsAwaitingLevelDownCell = npgsqlData.GetBoolean(6),
+                IsAwaitingDeleteAccount = npgsqlData.GetBoolean(3),
+                IsAwaitingJoinRoom = npgsqlData.GetBoolean(4),
+                IsAwaitingCreateRoom = npgsqlData.GetBoolean(5),
+                IsAwaitingLevelUpCell = npgsqlData.GetBoolean(6),
+                IsAwaitingLevelDownCell = npgsqlData.GetBoolean(7),
 
-                AccountName = npgsqlData.IsDBNull(7) ? null : npgsqlData.GetString(7),
-                RoomId = npgsqlData.IsDBNull(8) ? null : npgsqlData.GetString(8),
-                MaxNumberOfPlayers = npgsqlData.IsDBNull(9) ? null : npgsqlData.GetInt32(9)
+                AccountName = npgsqlData.IsDBNull(8) ? null : npgsqlData.GetString(8),
+                RoomId = npgsqlData.IsDBNull(9) ? null : npgsqlData.GetString(9),
+                MaxNumberOfPlayers = npgsqlData.IsDBNull(10) ? null : npgsqlData.GetInt32(10)
             };
             return status;
         }
