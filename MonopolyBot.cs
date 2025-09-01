@@ -152,7 +152,7 @@ namespace MonopolyBot
                 case "Delete Account":
                     await HandleDeleteAccount(botClient, message);
                     return;
-                case "Rooms menu":
+                case "Rooms Menu":
                     await HandleRoomsMenu(botClient, message);
                     return;
 
