@@ -15,6 +15,7 @@ namespace MonopolyBot.Models.Bot
         public bool IsAwaitingDeleteAccount { get; set; } = false;
         public bool IsAwaitingJoinRoom { get; set; } = false;
         public bool IsAwaitingCreateRoom { get; set; } = false;
+        public bool IsAwaitingCreateRoomPassword { get; set; } = false;
         public bool IsAwaitingLevelUpCell { get; set; } = false;
         public bool IsAwaitingLevelDownCell { get; set; } = false;
 

@@ -1,16 +1,16 @@
-﻿using Telegram.Bot.Polling;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
-using MonopolyBot.Interface.IService;
+﻿using MonopolyBot.Interface;
 using MonopolyBot.Interface.IRepository;
-using MonopolyBot.Interface;
+using MonopolyBot.Interface.IService;
 using MonopolyBot.Models.API.ApiResponse;
+using MonopolyBot.Models.ApiResponse;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
-using MonopolyBot.Models.ApiResponse;
+using Telegram.Bot;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MonopolyBot
 {
@@ -116,7 +116,12 @@ namespace MonopolyBot
             {
                 await HandleCallbackLeaveRoom(botClient, chatId, data);
             }
-            else 
+            else
+            if(data.StartsWith("CreateRoom:"))
+            {
+                await HandleCallbackCreateRoom(botClient, chatId, data);
+            }
+            else
             if (data.StartsWith("GameStatus:"))
             {
                 await HandleCallbackGameStatus(botClient, chatId, data);
@@ -126,7 +131,7 @@ namespace MonopolyBot
             {
                 await HandleCallbackReturnToGame(botClient, chatId, data);
             }
-            else 
+            else
             if (data.StartsWith("WatchGame:"))
             {
                 await HandleCallbackWatchGame(botClient, chatId, data);
@@ -309,56 +314,71 @@ namespace MonopolyBot
         }
         private async Task HandleGetRooms(ITelegramBotClient botClient, Message message)
         {
-            List<RoomDto> rooms = await _roomService.GetRoomsAsync(message.Chat.Id);
-            if (rooms.Count == 0)
+            try
             {
-                await botClient.SendMessage(message.Chat.Id, "Немає доступних кімнат.");
-            }
-            else
-            {
-                await botClient.SendMessage(message.Chat.Id, "Доступні кімнати:");
-                AccServiceResponse account = await _accService.GetMyDataAsync(message.Chat.Id);
-                foreach (var room in rooms)
+                List<RoomDto> rooms = await _roomService.GetRoomsAsync(message.Chat.Id);
+                if (rooms.Count == 0)
                 {
-                    bool playerInside = false;
-                    InlineKeyboardMarkup keyboardMarkup;
-                    foreach (var player in room.Players)
-                    {
-                        if (player.Id == account.Id)
-                            playerInside = true;
-                    }
-                    if (playerInside && room.InGame)
-                    {
-                        keyboardMarkup = new
-                        (
-                            InlineKeyboardButton.WithCallbackData("Return To Game", $"ReturnToGame:{room.RoomId}"),
-                            InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
-                        );
-                    }
-                    else if (playerInside)
-                    {
-                        keyboardMarkup = new
-                        (
-                            InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
-                        );
-                    }
-                    else if (room.InGame)
-                    {
-                        keyboardMarkup = new
-                        (
-                            InlineKeyboardButton.WithCallbackData("Watch Game", $"WatchGame:{room.RoomId}")
-                        );
-                    }
-                    else
-                    {
-                        keyboardMarkup = new
-                        (
-                            InlineKeyboardButton.WithCallbackData("Join", $"JoinRoom:{room.RoomId}:{room.HavePassword}")
-                        );
-                    }
-                    string text = BuildRoomMessage(room);
-                    await botClient.SendMessage(message.Chat.Id, text, replyMarkup: keyboardMarkup);
+                    await botClient.SendMessage(message.Chat.Id, "Немає доступних кімнат.");
                 }
+                else
+                {
+                    await botClient.SendMessage(message.Chat.Id, "Доступні кімнати:");
+                    AccServiceResponse account = await _accService.GetMyDataAsync(message.Chat.Id);
+                    foreach (var room in rooms)
+                    {
+                        bool playerInside = false;
+                        InlineKeyboardMarkup keyboardMarkup;
+                        foreach (var player in room.Players)
+                        {
+                            if (player.Id == account.Id)
+                                playerInside = true;
+                        }
+                        if (playerInside && room.InGame)
+                        {
+                            keyboardMarkup = new
+                            (
+                                InlineKeyboardButton.WithCallbackData("Return To Game", $"ReturnToGame:{room.RoomId}"),
+                                InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
+                            );
+                        }
+                        else if (playerInside)
+                        {
+                            keyboardMarkup = new
+                            (
+                                InlineKeyboardButton.WithCallbackData("Leave", $"LeaveRoom:{room.RoomId}")
+                            );
+                        }
+                        else if (room.InGame)
+                        {
+                            keyboardMarkup = new
+                            (
+                                InlineKeyboardButton.WithCallbackData("Watch Game", $"WatchGame:{room.RoomId}")
+                            );
+                        }
+                        else
+                        {
+                            keyboardMarkup = new
+                            (
+                                InlineKeyboardButton.WithCallbackData("Join", $"JoinRoom:{room.RoomId}:{room.HavePassword}")
+                            );
+                        }
+                        string text = BuildRoomMessage(room);
+                        await botClient.SendMessage(message.Chat.Id, text, replyMarkup: keyboardMarkup);
+                    }
+                }
+
+            }
+            catch(UnauthorizedAccessException ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, ex.Message);
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+                return;
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendMessage(message.Chat.Id, $"Помилка при отриманні кімнат: {ex.Message}");
+                return;
             }
         }
         private async Task HandleAccountsMenu(ITelegramBotClient botClient, Message message)
@@ -696,6 +716,12 @@ namespace MonopolyBot
         }
         private async Task HandleCreateRoomStatus(ITelegramBotClient botClient, Message message, ChatStatus status)
         {
+            InlineKeyboardMarkup keyboardMarkup = new
+                (
+                    InlineKeyboardButton.WithCallbackData("🔐 Створити кімнату з паролем", $"CreateRoom:set"),
+                    InlineKeyboardButton.WithCallbackData("🔓 Створити кімнату без пароля", $"CreateRoom:null")
+                );
+
             if (status.MaxNumberOfPlayers == null)
             {
                 int maxNumberOfPlayers;
@@ -705,41 +731,46 @@ namespace MonopolyBot
                 }
                 catch (FormatException)
                 {
-                    await botClient.SendMessage(message.Chat.Id, "Будь ласка, введіть коректне число для максимальної кількості гравців:");
+                    await botClient.SendMessage(message.Chat.Id, "⚠️ Введіть коректне число для максимальної кількості гравців:");
                     return;
                 }
                 if (maxNumberOfPlayers > 4 || maxNumberOfPlayers < 2)
                 {
-                    await botClient.SendMessage(message.Chat.Id, "Максимальна кількість гравців повинна бути від 2 до 4. Спробуйте ще раз:");
+                    await botClient.SendMessage(message.Chat.Id, "❌ Кількість гравців повинна бути від 2 до 4. Спробуйте ще раз:");
                     return;
                 }
                 status.MaxNumberOfPlayers = maxNumberOfPlayers;
                 await _chatRepository.UpdateChatStatus(status);
-                await botClient.SendMessage(message.Chat.Id, "Введіть пароль для кімнати або null:");
+
+                await botClient.SendMessage(message.Chat.Id, "Оберіть тип кімнати:", replyMarkup: keyboardMarkup);
             }
             else
+            if (status.IsAwaitingCreateRoomPassword)
             {
-                string? password;
-                if (message.Text == "null")
-                    password = null;
-                else
-                    password = message.Text;
                 try
                 {
-                    RoomDto roomResponse = await _roomService.CreateRoomAsync(message.Chat.Id, status.MaxNumberOfPlayers ?? 2, password);
+                    RoomDto roomResponse = await _roomService.CreateRoomAsync(message.Chat.Id, status.MaxNumberOfPlayers.Value, message.Text);
                     await _userRepository.UpdateUserGameId(message.Chat.Id, roomResponse.RoomId);
+                    
                     await botClient.SendMessage(message.Chat.Id, $"Кімната {roomResponse.RoomId} створена.");
                 }
                 catch (UnauthorizedAccessException ex)
                 {
                     await botClient.SendMessage(message.Chat.Id, ex.Message);
                     await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+                    await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                    return;
                 }
                 catch (Exception ex)
                 {
                     await botClient.SendMessage(message.Chat.Id, $"Помилка при створенні кімнати: {ex.Message}");
+                    await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                    return;
                 }
-                await _chatRepository.DeleteChatStatus(message.Chat.Id);
+            }
+            else
+            {
+                await botClient.SendMessage(message.Chat.Id, "Оберіть тип кімнати:", replyMarkup: keyboardMarkup);
             }
         }
         private async Task HandleLevelUpStatus(ITelegramBotClient botClient, Message message, ChatStatus status)
@@ -830,6 +861,42 @@ namespace MonopolyBot
                 catch (Exception ex)
                 {
                     await botClient.SendMessage(chatId, $"Помилка при приєднанні до кімнати: {ex.Message}");
+                }
+            }
+        }
+        private async Task HandleCallbackCreateRoom(ITelegramBotClient botClient, long chatId, string data)
+        {
+            string passwordStatus = data.Split(':')[1];
+            string? password;
+
+            if (passwordStatus == "set")
+            {
+                await botClient.SendMessage(chatId, "Введіть пароль для кімнати:");
+
+            }
+            else
+            if (passwordStatus == "null")
+            {
+                try
+                {
+                    password = null;
+
+                    ChatStatus status = await _chatRepository.ReadChatStatus(chatId);
+                    RoomDto room = await _roomService.CreateRoomAsync(chatId, status.MaxNumberOfPlayers.Value, password);
+
+                    await _userRepository.UpdateUserGameId(chatId, room.RoomId);
+                    await botClient.SendMessage(chatId, $"Кімната {room.RoomId} створена.");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    await botClient.SendMessage(chatId, ex.Message);
+                    await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    await botClient.SendMessage(chatId, $"Помилка при створенні кімнати: {ex.Message}");
+                    return;
                 }
             }
         }
@@ -1056,12 +1123,13 @@ namespace MonopolyBot
             List<Task> tasks = new List<Task>();
             var usersInGame = await _userRepository.ReadUsersWithGameId(room.RoomId);
 
+            InlineKeyboardMarkup keyboardMarkup = new
+                    (
+                        InlineKeyboardButton.WithCallbackData("Game Status", $"GameStatus:{room.RoomId}")
+                    );
+
             foreach (var user in usersInGame)
             {
-                InlineKeyboardMarkup keyboardMarkup = new
-                            (
-                                InlineKeyboardButton.WithCallbackData("Game Status", $"GameStatus:{room.RoomId}")
-                            );
                 Task task = botClient.SendMessage(user.ChatId, "Гру в Вашій кімнаті розпочато." +
                     "\nНатисніть кнопку нижче, щоб перейти до гри:", replyMarkup: keyboardMarkup);
                 tasks.Add(task);
