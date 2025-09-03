@@ -718,8 +718,8 @@ namespace MonopolyBot
         {
             InlineKeyboardMarkup keyboardMarkup = new
                 (
-                    InlineKeyboardButton.WithCallbackData("🔐 Створити кімнату з паролем", $"CreateRoom:set"),
-                    InlineKeyboardButton.WithCallbackData("🔓 Створити кімнату без пароля", $"CreateRoom:null")
+                    InlineKeyboardButton.WithCallbackData("🔐 Кімната з паролем", $"CreateRoom:set"),
+                    InlineKeyboardButton.WithCallbackData("🔓 Кімната без пароля", $"CreateRoom:null")
                 );
 
             if (status.MaxNumberOfPlayers == null)
@@ -868,11 +868,23 @@ namespace MonopolyBot
         {
             string passwordStatus = data.Split(':')[1];
             string? password;
+            ChatStatus status;
+
+            try
+            {
+                status = await _chatRepository.ReadChatStatus(chatId);
+            }
+            catch(Exception ex)
+            {
+                await botClient.SendMessage(chatId, $"Помилка при створенні кімнати: {ex.Message}");
+                return;
+            }
 
             if (passwordStatus == "set")
             {
+                status.IsAwaitingCreateRoomPassword = true;
+                await _chatRepository.UpdateChatStatus(status);
                 await botClient.SendMessage(chatId, "Введіть пароль для кімнати:");
-
             }
             else
             if (passwordStatus == "null")
@@ -881,7 +893,6 @@ namespace MonopolyBot
                 {
                     password = null;
 
-                    ChatStatus status = await _chatRepository.ReadChatStatus(chatId);
                     RoomDto room = await _roomService.CreateRoomAsync(chatId, status.MaxNumberOfPlayers.Value, password);
 
                     await _userRepository.UpdateUserGameId(chatId, room.RoomId);
