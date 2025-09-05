@@ -499,11 +499,11 @@ namespace MonopolyBot
                 if (result.ReceiverId != null)
                 {
                     selfMessage = $"Оплата {result.Amount}$ на рахунок {result.ReceiverName} здійснена.\n" +
-                        $"Ваш баланс: {result.NewPlayerBalance}$" +
-                        $"Баланс {result.ReceiverName}: {result.NewReceiverBalance}";
+                        $"Ваш баланс: {result.NewPlayerBalance}$\n" +
+                        $"Баланс {result.ReceiverName}: {result.NewReceiverBalance}$";
 
-                    othersMessage = $"{result.PlayerName} сплатив {result.Amount}$ гравцю {result.ReceiverName}. " +
-                        $"{result.PlayerName} баланс: {result.NewPlayerBalance}$, " +
+                    othersMessage = $"{result.PlayerName} сплатив {result.Amount}$ гравцю {result.ReceiverName}.\n" +
+                        $"{result.PlayerName} баланс: {result.NewPlayerBalance}$\n" +
                         $"{result.ReceiverName} баланс: {result.NewReceiverBalance}$";
                 }
                 else
@@ -647,19 +647,21 @@ namespace MonopolyBot
             }
             else
             {
-                AccServiceResponse loginData = await _accService.LoginAsync(message.Chat.Id, status.AccountName, message.Text);
-                if (loginData.Success)
+                AccountDto loginData;
+                try
                 {
-                    await botClient.SendMessage(message.Chat.Id, "Ви увійшли в систему.");
-                    await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: roomsKeyboardMarkup);
-                    await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                    loginData = await _accService.LoginAsync(message.Chat.Id, status.AccountName, message.Text);
                 }
-                else
+                catch (Exception ex)
                 {
-                    await botClient.SendMessage(message.Chat.Id, "Помилка при вході в систему");
-                    await botClient.SendMessage(message.Chat.Id, loginData.Message);
+                    await botClient.SendMessage(message.Chat.Id, $"Помилка при вході в систему: {ex.Message}");
                     await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                    return;
                 }
+
+                await botClient.SendMessage(message.Chat.Id, $"Ви увійшли в систему під ім'ям {loginData.Name}.");
+                await botClient.SendMessage(message.Chat.Id, "Виберіть пункт меню:", replyMarkup: roomsKeyboardMarkup);
+                await _chatRepository.DeleteChatStatus(message.Chat.Id);
             }
         }
         private async Task HandleRegisterStatus(ITelegramBotClient botClient, Message message, ChatStatus status)
@@ -672,8 +674,19 @@ namespace MonopolyBot
             }
             else
             {
-                string registerResult = await _accService.RegisterAsync(status.AccountName, message.Text);
-                await botClient.SendMessage(message.Chat.Id, registerResult);
+                AccountDto registerResult;
+                try
+                {
+                    registerResult = await _accService.RegisterAsync(status.AccountName, message.Text);
+                }
+                catch (Exception ex)
+                {
+                    await botClient.SendMessage(message.Chat.Id, $"Помилка при реєстрації: {ex.Message}");
+                    await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                    return;
+                }
+
+                await botClient.SendMessage(message.Chat.Id, $"Аккаунт {registerResult.Name} створено");
                 await _chatRepository.DeleteChatStatus(message.Chat.Id);
             }
         }
@@ -687,8 +700,19 @@ namespace MonopolyBot
             }
             else
             {
-                AccServiceResponse deleteResult = await _accService.DeleteAccountAsync(status.AccountName, message.Text);
-                await botClient.SendMessage(message.Chat.Id, deleteResult.Message);
+                DeleteAccountDto deleteResult;
+                try
+                {
+                    deleteResult = await _accService.DeleteAccountAsync(status.AccountName, message.Text);
+                }
+                catch (Exception)
+                {
+                    await botClient.SendMessage(message.Chat.Id, "Помилка при видаленні акаунту. Перевірте правильність введених даних.");
+                    await _chatRepository.DeleteChatStatus(message.Chat.Id);
+                    return;
+                }
+
+                await botClient.SendMessage(message.Chat.Id, $"Аккаунт {deleteResult.Name} успішно видалено");
                 await _chatRepository.DeleteChatStatus(message.Chat.Id);
             }
         }

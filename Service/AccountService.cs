@@ -1,6 +1,5 @@
 ﻿using MonopolyBot.Models.API.Request;
 using MonopolyBot.Interface;
-using MonopolyBot.Clients;
 using System.IdentityModel.Tokens.Jwt;
 using MonopolyBot.Interface.IService;
 using MonopolyBot.Interface.IClient;
@@ -36,95 +35,68 @@ namespace MonopolyBot.Service
                 Id = user.UserId
             };
         }
-        public async Task<string> RegisterAsync(string name, string password)
+        public async Task<AccountDto> RegisterAsync(string name, string password)
         {
             AccountRequest account = new AccountRequest()
             {
                 Name = name,
                 Password = password
             };
-            var data = await _accountClient.RegisterAsync(account);
+            ApiResponse<AccountDto> data = await _accountClient.RegisterAsync(account);
 
-            if (data.Success)
-                return "Реєстрація успішна";
-            else
-                return $"Помилка реєстрації: {data.Message}";
+            if (!data.Success)
+                throw new Exception(data.Message);
+            return data.Data;
         }
-        public async Task<AccServiceResponse> LoginAsync(long chatId, string name, string password)
+        public async Task<AccountDto> LoginAsync(long chatId, string name, string password)
         {
             AccountRequest account = new AccountRequest()
             {
                 Name = name,
                 Password = password
             };
-            var data = await _accountClient.LoginAndReturnJWTAsync(account);
+            ApiResponse<LoginDto> data = await _accountClient.LoginAndReturnJWTAsync(account);
 
-            if (data == null || string.IsNullOrEmpty(data.Data))
-            {
-                return new AccServiceResponse()
-                {
-                    Success = false,
-                    Message = "Помилка авторизації: не отримано JWT"
-                };
-            }
             if (data.Success)
             {
                 if(await _userRepository.SearchUserByChatId(chatId))
                 {
                     await _userRepository.DeleteUserWithChatId(chatId);
                 }
-                ApiResponse<AccountDto> accountResponse = await _accountClient.MeAsync(data.Data);
-                var handler = new JwtSecurityTokenHandler();
-                var token = handler.ReadJwtToken(data.Data);
+                
                 await _userRepository.InsertUser(new User()
                 {
                     ChatId = chatId,
-                    UserId = accountResponse.Data.Id,
+                    UserId = data.Data.Account.Id,
                     GameId = null,
                     Name = name,
-                    JWT = data.Data,
-                    CreatedAt = DateTimeOffset.FromUnixTimeSeconds(token.Payload.Iat.Value).DateTime,
-                    ExpiresAt = DateTimeOffset.FromUnixTimeSeconds(token.Payload.Exp.Value).DateTime
+                    JWT = data.Data.Token,
+                    CreatedAt = data.Data.CreatedAt,
+                    ExpiresAt = data.Data.ExpiresAt
                 });
-                return new AccServiceResponse()
-                {
-                    Success = data.Success,
-                    Message = data.Message,
-                    Name = name,
-                    Id = accountResponse.Data.Id,
-                };
+                return data.Data.Account;
             }
-
-            return new AccServiceResponse()
+            else
             {
-                Success = data.Success,
-                Message = data.Message
-            };
+                throw new Exception(data.Message);
+            }
         }
-        public async Task<AccServiceResponse> DeleteAccountAsync(string name, string password)
+        public async Task<DeleteAccountDto> DeleteAccountAsync(string name, string password)
         {
             AccountRequest account = new AccountRequest()
             {
                 Name = name,
                 Password = password
             };
-            var data = await _accountClient.DeleteAccount(account);
+            ApiResponse<DeleteAccountDto> data = await _accountClient.DeleteAccount(account);
 
             if (data.Success)
             {
-                return new AccServiceResponse()
-                {
-                    Success = data.Success,
-                    Message = data.Message
-                };
+                return data.Data;
             }
             else
             {
-                return new AccServiceResponse()
-                {
-                    Success = data.Success,
-                    Message = data.Message
-                };
+                throw new Exception(data.Message);
             }
         }
     }

@@ -6,8 +6,8 @@ namespace MonopolyBot.Interface.IClient
     internal interface IAccountClient
     {
         public Task<ApiResponse<AccountDto>> MeAsync(string jwt);
-        public Task<ApiResponse<object>> RegisterAsync(AccountRequest account);
-        public Task<ApiResponse<string>> LoginAndReturnJWTAsync(AccountRequest account);
-        public Task<ApiResponse<object>> DeleteAccount(AccountRequest account);
+        public Task<ApiResponse<AccountDto>> RegisterAsync(AccountRequest account);
+        public Task<ApiResponse<LoginDto>> LoginAndReturnJWTAsync(AccountRequest account);
+        public Task<ApiResponse<DeleteAccountDto>> DeleteAccount(AccountRequest account);
     }
 }

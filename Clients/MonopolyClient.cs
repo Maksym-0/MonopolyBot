@@ -18,22 +18,22 @@ namespace MonopolyBot.Clients
             var apiResponse = JsonConvert.DeserializeObject<ApiResponse<AccountDto>>(responseJson);
             return apiResponse;
         }
-        public async Task<ApiResponse<object>> RegisterAsync(AccountRequest account)
+        public async Task<ApiResponse<AccountDto>> RegisterAsync(AccountRequest account)
         {
             string responseJson = await SendAccountRequestAsync(null, account, "/register", HttpMethod.Post);
-            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<object>>(responseJson);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<AccountDto>>(responseJson);
             return apiResponse;
         }
-        public async Task<ApiResponse<string>> LoginAndReturnJWTAsync(AccountRequest account)
+        public async Task<ApiResponse<LoginDto>> LoginAndReturnJWTAsync(AccountRequest account)
         {
             string responseJson = await SendAccountRequestAsync(null, account, "/login", HttpMethod.Post);
-            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<string>>(responseJson);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<LoginDto>>(responseJson);
             return apiResponse;
         }
-        public async Task<ApiResponse<object>> DeleteAccount(AccountRequest account)
+        public async Task<ApiResponse<DeleteAccountDto>> DeleteAccount(AccountRequest account)
         {
             string responseJson = await SendAccountRequestAsync(null, account, "/delete", HttpMethod.Delete);
-            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<object>>(responseJson);
+            var apiResponse = JsonConvert.DeserializeObject<ApiResponse<DeleteAccountDto>>(responseJson);
             return apiResponse;
         }
 
