@@ -87,7 +87,7 @@ namespace MonopolyBot.Database
             } while (await npgsqlData.ReadAsync());
             return users;
         }
-        public async Task UpdateUserGameId(long chatId, string? gameId)
+        public async Task UpdateUserGameIdWithChatId(long chatId, string? gameId)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.UserTable}\" " +
                 $"SET \"GameId\" = @gameId " +
@@ -96,6 +96,24 @@ namespace MonopolyBot.Database
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("chatId", chatId);
+            if(gameId != null)
+                cmd.Parameters.AddWithValue("gameId", gameId);
+            else
+                cmd.Parameters.AddWithValue("gameId", DBNull.Value);
+
+            await _connection.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+            await _connection.CloseAsync();
+        }
+        public async Task UpdateUserGameIdWithUserId(string userId, string? gameId)
+        {
+            var sql = $"UPDATE PUBLIC.\"{Constants.UserTable}\" " +
+                $"SET \"GameId\" = @gameId " +
+                $"WHERE \"UserId\" = @userId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.DBConnect);
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
+
+            cmd.Parameters.AddWithValue("userId", userId);
             if(gameId != null)
                 cmd.Parameters.AddWithValue("gameId", gameId);
             else

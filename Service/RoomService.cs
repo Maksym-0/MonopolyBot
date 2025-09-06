@@ -58,7 +58,7 @@ namespace MonopolyBot.Service
                 throw new Exception(response.Message);
             
             user.GameId = roomId;
-            await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
+            await _userRepository.UpdateUserGameIdWithChatId(user.ChatId, user.GameId);
             return response.Data;
         }
         public async Task<string> QuitRoomAsync(long chatId)
@@ -71,7 +71,7 @@ namespace MonopolyBot.Service
                 throw new Exception(response.Message);
 
             user.GameId = null;
-            await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
+            await _userRepository.UpdateUserGameIdWithChatId(user.ChatId, user.GameId);
             return response.Message;
         }
     }

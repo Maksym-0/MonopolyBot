@@ -59,12 +59,7 @@ namespace MonopolyBot.Service
 
             if (data.Success)
             {
-                if(await _userRepository.SearchUserByChatId(chatId))
-                {
-                    await _userRepository.DeleteUserWithChatId(chatId);
-                }
-                
-                await _userRepository.InsertUser(new User()
+                User response = new User()
                 {
                     ChatId = chatId,
                     UserId = data.Data.Account.Id,
@@ -73,7 +68,20 @@ namespace MonopolyBot.Service
                     JWT = data.Data.Token,
                     CreatedAt = data.Data.CreatedAt,
                     ExpiresAt = data.Data.ExpiresAt
-                });
+                };
+
+                User user;
+                try
+                {
+                    user = await _userRepository.ReadUserWithChatId(chatId);
+                    await _userRepository.DeleteUserWithChatId(chatId);
+                    response.GameId = user.GameId;
+                }
+                finally
+                {
+                    await _userRepository.InsertUser(response);
+                }
+
                 return data.Data.Account;
             }
             else

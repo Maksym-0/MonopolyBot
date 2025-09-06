@@ -104,11 +104,16 @@ namespace MonopolyBot.Service
             if(user.GameId == null)
                 throw new Exception("Гравець вже поза грою");
 
-            var response = await _gameClient.LeaveGameAsync(user.JWT, user.GameId);
+            ApiResponse<LeaveGameDto> response = await _gameClient.LeaveGameAsync(user.JWT, user.GameId);
             if (response.Success)
             { 
                 user.GameId = null;
-                await _userRepository.UpdateUserGameId(user.ChatId, user.GameId);
+                await _userRepository.UpdateUserGameIdWithChatId(user.ChatId, user.GameId);
+                if (response.Data.IsGameOver)
+                {
+                    response.Data.Winner.GameId = null;
+                    await _userRepository.UpdateUserGameIdWithUserId(response.Data.Winner.Id, response.Data.Winner.GameId);
+                }
             }
             else
             {

@@ -623,7 +623,7 @@ namespace MonopolyBot
         {
             try
             {
-                await _userRepository.UpdateUserGameId(message.Chat.Id, null);
+                await _userRepository.UpdateUserGameIdWithChatId(message.Chat.Id, null);
                 await botClient.SendMessage(message.Chat.Id, "Ви припинили спостереження за грою.", replyMarkup: roomsKeyboardMarkup);
             }
             catch (UnauthorizedAccessException ex)
@@ -774,7 +774,7 @@ namespace MonopolyBot
                 try
                 {
                     RoomDto roomResponse = await _roomService.CreateRoomAsync(message.Chat.Id, status.MaxNumberOfPlayers.Value, message.Text);
-                    await _userRepository.UpdateUserGameId(message.Chat.Id, roomResponse.RoomId);
+                    await _userRepository.UpdateUserGameIdWithChatId(message.Chat.Id, roomResponse.RoomId);
                     
                     await botClient.SendMessage(message.Chat.Id, $"Кімната {roomResponse.RoomId} створена.");
                 }
@@ -870,7 +870,7 @@ namespace MonopolyBot
                 try
                 {
                     RoomDto roomResponse = await _roomService.JoinRoomAsync(chatId, id, null);
-                    await _userRepository.UpdateUserGameId(chatId, id);
+                    await _userRepository.UpdateUserGameIdWithChatId(chatId, id);
                     await botClient.SendMessage(chatId, $"Ви приєдналися до кімнати {roomResponse.RoomId}.");
                     if (roomResponse.InGame == true)
                     {
@@ -919,7 +919,7 @@ namespace MonopolyBot
 
                     RoomDto room = await _roomService.CreateRoomAsync(chatId, status.MaxNumberOfPlayers.Value, password);
 
-                    await _userRepository.UpdateUserGameId(chatId, room.RoomId);
+                    await _userRepository.UpdateUserGameIdWithChatId(chatId, room.RoomId);
                     await botClient.SendMessage(chatId, $"Кімната {room.RoomId} створена.");
                 }
                 catch (UnauthorizedAccessException ex)
@@ -994,7 +994,7 @@ namespace MonopolyBot
             string id = data.Split(':')[1];
             try
             {
-                await _userRepository.UpdateUserGameId(chatId, id);
+                await _userRepository.UpdateUserGameIdWithChatId(chatId, id);
                 GameDto gameResponse = await _gameService.GameStatusAsync(chatId);
                 ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup
                             (
@@ -1012,13 +1012,13 @@ namespace MonopolyBot
             }
             catch (UnauthorizedAccessException ex)
             {
-                await _userRepository.UpdateUserGameId(chatId, null);
+                await _userRepository.UpdateUserGameIdWithChatId(chatId, null);
                 await botClient.SendMessage(chatId, ex.Message);
                 await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
-                await _userRepository.UpdateUserGameId(chatId, null);
+                await _userRepository.UpdateUserGameIdWithChatId(chatId, null);
                 await botClient.SendMessage(chatId, $"Помилка при спостереженні за грою: {ex.Message}");
             }
         }
