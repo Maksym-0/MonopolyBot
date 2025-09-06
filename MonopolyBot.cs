@@ -994,8 +994,8 @@ namespace MonopolyBot
             string id = data.Split(':')[1];
             try
             {
-                GameDto gameResponse = await _gameService.GameStatusAsync(chatId);
                 await _userRepository.UpdateUserGameId(chatId, id);
+                GameDto gameResponse = await _gameService.GameStatusAsync(chatId);
                 ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup
                             (
                             new[]
@@ -1012,11 +1012,13 @@ namespace MonopolyBot
             }
             catch (UnauthorizedAccessException ex)
             {
+                await _userRepository.UpdateUserGameId(chatId, null);
                 await botClient.SendMessage(chatId, ex.Message);
                 await botClient.SendMessage(chatId, "Виберіть пункт меню:", replyMarkup: loginKeyboardMarkup);
             }
             catch (Exception ex)
             {
+                await _userRepository.UpdateUserGameId(chatId, null);
                 await botClient.SendMessage(chatId, $"Помилка при спостереженні за грою: {ex.Message}");
             }
         }
