@@ -973,7 +973,6 @@ namespace MonopolyBot
         }
         private async Task HandleCallbackReturnToGame(ITelegramBotClient botClient, long chatId, string data)
         {
-            string id = data.Split(':')[1];
             try
             {
                 GameDto gameResponse = await _gameService.GameStatusAsync(chatId);
