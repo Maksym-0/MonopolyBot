@@ -2,12 +2,6 @@
 using MonopolyBot.Interface.IService;
 using MonopolyBot.Models.Bot;
 using MonopolyBot.Models.Service;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MonopolyBot.Service
 {
@@ -20,7 +14,7 @@ namespace MonopolyBot.Service
             _userRepository = userRepository;
         }
 
-        public async Task<AuthorizationResult> CheckAuthorizationStatus(long chatId)
+        public async Task<AuthorizationResult> GetAuthorizationResultAsync(long chatId)
         {
             if (await _userRepository.SearchUserByChatId(chatId))
             {
@@ -53,7 +47,7 @@ namespace MonopolyBot.Service
         }
         public async Task<User> GetAuthorizedUserAsync(long chatId)
         {
-            var data = await CheckAuthorizationStatus(chatId);
+            var data = await GetAuthorizationResultAsync(chatId);
             if (!data.IsAuthorized)
                 throw new UnauthorizedAccessException(data.Message);
             return data.User;

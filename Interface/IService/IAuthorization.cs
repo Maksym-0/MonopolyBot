@@ -10,7 +10,7 @@ namespace MonopolyBot.Interface.IService
 {
     internal interface IAuthorization
     {
-        Task<AuthorizationResult> CheckAuthorizationStatus(long chatId);
+        Task<AuthorizationResult> GetAuthorizationResultAsync(long chatId);
         Task<User> GetAuthorizedUserAsync(long chatId);
     }
 }
